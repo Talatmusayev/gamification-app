@@ -230,7 +230,7 @@ export default function OnboardingScreen() {
               </View>
 
               <View style={styles.copyBlock}>
-                <Text style={styles.eyebrow}>Dew &amp; Bloom</Text>
+                <Text style={styles.eyebrow}>Dewy</Text>
                 <Text style={styles.heading}>
                   Your sleep &amp; steps grow a living sanctuary
                 </Text>

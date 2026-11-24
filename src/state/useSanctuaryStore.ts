@@ -74,6 +74,10 @@ export interface SanctuaryActions {
   ) => ReturnType<typeof waterPlacement>;
   startLantern: (nowIso?: string) => void;
   awardBedtimeDew: (amount?: number) => void;
+  applyFieldSnapReward: (input: {
+    sunlightBonus: number;
+    unlockItemId?: string | null;
+  }) => void;
   finishLantern: (nowIso?: string, steps?: number) => MorningRevealResult | null;
   dismissPendingReveal: () => void;
   setPendingReveal: (reveal: MorningRevealResult | null) => void;
@@ -333,6 +337,33 @@ export const useSanctuaryStore = create<SanctuaryStore>()(
             dewBalance: state.profile.dewBalance + bonus,
           },
         }));
+        syncWidgetSnapshot(get());
+      },
+
+      applyFieldSnapReward: ({ sunlightBonus, unlockItemId }) => {
+        const bonus = Math.max(
+          0,
+          Math.round(Number.isFinite(sunlightBonus) ? sunlightBonus : 0),
+        );
+        const normalizedUnlockId =
+          typeof unlockItemId === 'string' && unlockItemId.trim().length > 0
+            ? unlockItemId.trim()
+            : null;
+
+        set((state) => {
+          const shouldUnlock =
+            Boolean(normalizedUnlockId) &&
+            !state.ownedItemIds.includes(normalizedUnlockId as string);
+          return {
+            profile: {
+              ...state.profile,
+              sunlightBalance: state.profile.sunlightBalance + bonus,
+            },
+            ownedItemIds: shouldUnlock
+              ? [...state.ownedItemIds, normalizedUnlockId as string]
+              : state.ownedItemIds,
+          };
+        });
         syncWidgetSnapshot(get());
       },
 

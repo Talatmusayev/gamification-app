@@ -1,9 +1,9 @@
-# Privacy Policy for Dew & Bloom
+# Privacy Policy for Dewy
 
 **Effective Date:** November 24, 2026  
-**App Name:** Dew & Bloom (`com.dewbloom.app`)
+**App Name:** Dewy (`com.dewy.garden`)
 
-Dew & Bloom is built to help you build calmer sleep and movement habits without sacrificing your privacy. This Privacy Policy explains what information we access, how we use it, and the controls you have.
+Dewy is built to help you build calmer sleep and movement habits without sacrificing your privacy. This Privacy Policy explains what information we access, how we use it, and the controls you have.
 
 ---
 
@@ -19,7 +19,7 @@ Dew & Bloom is built to help you build calmer sleep and movement habits without 
 ## 2. Information We Access & How We Use It
 
 ### A. Apple HealthKit (iOS) & Android Health Connect (Android)
-If you choose **Health Sync** mode and grant permission, Dew & Bloom requests **read-only** access to:
+If you choose **Health Sync** mode and grant permission, Dewy requests **read-only** access to:
 - **Sleep duration / sleep sessions** (to calculate Morning Dew and clear Morning Fog)
 - **Daily step counts** (to calculate Warm Sunlight)
 
@@ -34,7 +34,7 @@ If you sign in with an email or account for cloud sync:
 - Session tokens are stored securely on your device using `expo-secure-store` / `AsyncStorage`.
 
 ### C. Subscriptions & Purchases (RevenueCat)
-- In-app purchases and 7-day free trials for *Dew & Bloom Pro* are processed by Apple App Store / Google Play and managed via **RevenueCat**.
+- In-app purchases and 7-day free trials for *Dewy Pro* are processed by Apple App Store / Google Play and managed via **RevenueCat**.
 - RevenueCat receives an anonymous app user ID and purchase receipt/entitlement status to verify whether Pro features are unlocked. RevenueCat never receives your sleep or step data.
 
 ### D. Privacy-Safe Product Analytics (PostHog)
@@ -46,14 +46,14 @@ If you sign in with an email or account for cloud sync:
 ## 3. Data Retention & 1-Tap Account Deletion
 
 - **Local Data:** Remains on your device until you reset data or uninstall the app.
-- **Cloud Account Deletion:** Open **Settings → Account → Delete account** inside Dew & Bloom. Confirming deletion immediately removes your cloud profile, daily logs, and garden placements from our servers and signs you out.
+- **Cloud Account Deletion:** Open **Settings → Account → Delete account** inside Dewy. Confirming deletion immediately removes your cloud profile, daily logs, and garden placements from our servers and signs you out.
 - You may also revoke Apple HealthKit or Android Health Connect permissions at any time in your device's system Settings.
 
 ---
 
 ## 4. Children's Privacy
 
-Dew & Bloom is not directed to children under 13 (or the applicable age of digital consent in your region), and we do not knowingly collect personal information from children.
+Dewy is not directed to children under 13 (or the applicable age of digital consent in your region), and we do not knowingly collect personal information from children.
 
 ---
 
@@ -65,4 +65,4 @@ If we make material changes to this Privacy Policy, we will update the Effective
 
 ## 6. Contact
 
-If you have any questions about this Privacy Policy or your data, please contact us via the support link in the App Store / Google Play listing or inside **Settings** in Dew & Bloom.
+If you have any questions about this Privacy Policy or your data, please contact us via the support link in the App Store / Google Play listing or inside **Settings** in Dewy.

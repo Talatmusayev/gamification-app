@@ -7,7 +7,7 @@ export function Footer() {
         <div className="footer-inner">
           <a className="footer-brand" href="#top">
             <LiquidDewLogo size={26} />
-            <span>Dew &amp; Bloom</span>
+            <span>Dewy</span>
           </a>
 
           <div className="footer-links">
@@ -15,7 +15,7 @@ export function Footer() {
             <a href="/app-ads.txt">app-ads.txt</a>
           </div>
 
-          <p className="footer-copy">&copy; 2026 Dew &amp; Bloom. All rights reserved.</p>
+          <p className="footer-copy">&copy; 2026 Dewy. All rights reserved.</p>
         </div>
       </div>
     </footer>

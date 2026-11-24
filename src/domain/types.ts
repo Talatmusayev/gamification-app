@@ -77,4 +77,7 @@ export interface MorningRevealResult {
   newFogLevel: FogLevel;
   keeperNote: string;
   log: DailyLog;
+  momentumTier?: 0 | 1 | 2 | 3;
+  momentumMultiplier?: number;
+  momentumLabel?: string | null;
 }

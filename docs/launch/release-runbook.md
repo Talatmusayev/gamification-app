@@ -1,6 +1,6 @@
-# Dew & Bloom — Android & iOS Release Runbook
+# Dewy — Android & iOS Release Runbook
 
-> Concise, copy-paste checklist to deploy the launch site (`web/`), configure live secrets, and publish `com.dewbloom.app` to Google Play and the Apple App Store via Expo EAS Cloud.
+> Concise, copy-paste checklist to deploy the launch site (`web/`), configure live secrets, and publish `com.dewy.garden` to Google Play and the Apple App Store via Expo EAS Cloud.
 
 ---
 
@@ -49,8 +49,8 @@ npm run preflight
 
 ---
 
-## 4. Android — Google Play Store (`com.dewbloom.app`)
-1. **Google Play Console (\$25 one-time):** Create app `Dew & Bloom: Sleep & Steps`, attach Privacy Policy URL (`https://<your-domain>/privacy`), complete Data Safety (health data used solely for app functionality, encrypted in transit, deletable in-app; non-personalized ads if enabled), IARC rating, and **Health Connect Permissions Declaration** (`READ_STEPS`, `READ_SLEEP` + short unlisted screen-recording).
+## 4. Android — Google Play Store (`com.dewy.garden`)
+1. **Google Play Console (\$25 one-time):** Create app `Dewy: Sleep & Walk Garden`, attach Privacy Policy URL (`https://<your-domain>/privacy`), complete Data Safety (health data used solely for app functionality, encrypted in transit, deletable in-app; non-personalized ads if enabled), IARC rating, and **Health Connect Permissions Declaration** (`READ_STEPS`, `READ_SLEEP` + short unlisted screen-recording).
 2. **Build & Submit AAB:**
    ```bash
    npx eas-cli build --platform android --profile production
@@ -60,8 +60,8 @@ npm run preflight
 
 ---
 
-## 5. iOS — Apple App Store (`com.dewbloom.app`)
-1. **Apple Developer Program (\$99/yr):** Ensure `com.dewbloom.app` has **HealthKit** and **In-App Purchase** enabled; create products `annual_pro` (\$19.99/yr + 7-day trial), `monthly_pro` (\$2.99/mo), and `lifetime_pro` (\$39.99) in App Store Connect and link them in RevenueCat.
+## 5. iOS — Apple App Store (`com.dewy.garden`)
+1. **Apple Developer Program (\$99/yr):** Ensure `com.dewy.garden` has **HealthKit** and **In-App Purchase** enabled; create products `annual_pro` (\$19.99/yr + 7-day trial), `monthly_pro` (\$2.99/mo), and `lifetime_pro` (\$39.99) in App Store Connect and link them in RevenueCat.
 2. **Build & Submit IPA (Cloud-built — no local Xcode required):**
    ```bash
    npx eas-cli build --platform ios --profile production

@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatSleepDuration } from '@/components/MorningRevealModal';
 import { BotanicalButton } from '@/components/ui/BotanicalButton';
 import { calculateHarmonyScore } from '@/domain/fog';
+import { calculateRestMomentum } from '@/domain/momentum';
 import type { DailyLog } from '@/domain/types';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
 import { fonts, palette, radii, spacing } from '@/theme/tokens';
@@ -110,6 +111,10 @@ export default function InsightsScreen() {
 
   const allLogs = useMemo(() => Object.values(dailyLogs), [dailyLogs]);
   const harmony = useMemo(() => calculateHarmonyScore(allLogs), [allLogs]);
+  const momentum = useMemo(
+    () => calculateRestMomentum(allLogs, profile.sleepGoalMin),
+    [allLogs, profile.sleepGoalMin],
+  );
   const sevenDaySeries = useMemo(() => buildLastSevenDays(dailyLogs), [dailyLogs]);
 
   const latestLog = useMemo(() => {
@@ -252,6 +257,15 @@ export default function InsightsScreen() {
               <Text style={styles.harmonyHeadline}>
                 {harmony.restfulDays} of {harmony.windowDays} restful days
               </Text>
+
+              {momentum.multiplier > 1 && momentum.label ? (
+                <View style={styles.momentumBadge}>
+                  <Text style={styles.momentumBadgeText}>
+                    {`${momentum.label} · ${momentum.multiplier}x Dew`}
+                    {momentum.graceActive ? ' · Grace night' : ''}
+                  </Text>
+                </View>
+              ) : null}
 
               <View style={styles.avgRow}>
                 <View style={styles.avgCell}>
@@ -460,6 +474,21 @@ const styles = StyleSheet.create({
     color: palette.textPrimary,
     fontVariant: ['tabular-nums'],
     letterSpacing: -0.25,
+  },
+  momentumBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: palette.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.border,
+    borderRadius: radii.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  momentumBadgeText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13,
+    color: palette.accentDew,
+    fontVariant: ['tabular-nums'],
   },
   avgRow: {
     flexDirection: 'row',

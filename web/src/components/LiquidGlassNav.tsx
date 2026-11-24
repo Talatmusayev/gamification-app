@@ -16,9 +16,9 @@ export function LiquidGlassNav() {
     <header className="nav-shell">
       <div className="wrap">
         <nav className="nav-bar liquid-glass" aria-label="Primary navigation">
-          <a className="nav-brand" href="#top" aria-label="Dew & Bloom home">
+          <a className="nav-brand" href="#top" aria-label="Dewy home">
             <LiquidDewLogo size={30} />
-            <span>Dew &amp; Bloom</span>
+            <span>Dewy</span>
           </a>
 
           <ul className="nav-links">

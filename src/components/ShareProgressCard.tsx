@@ -136,7 +136,7 @@ export function ShareProgressCard({
             <View style={styles.cardTopRow}>
               <View style={styles.brandRow}>
                 <Sprout size={16} strokeWidth={1.6} color={palette.accentMoss} />
-                <Text style={styles.brandText}>Dew &amp; Bloom</Text>
+                <Text style={styles.brandText}>Dewy</Text>
               </View>
               <Text style={styles.cardCaption}>Sunlit Meadow</Text>
             </View>

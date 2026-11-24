@@ -1,24 +1,24 @@
 {
   "expo": {
-    "name": "Dew & Bloom",
-    "slug": "dew-and-bloom",
-    "scheme": "dewbloom",
+    "name": "Dewy",
+    "slug": "dewy",
+    "scheme": "dewy",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.dewbloom.app",
+      "bundleIdentifier": "com.dewy.garden",
       "entitlements": {
         "com.apple.developer.healthkit": true
       },
       "infoPlist": {
-        "NSHealthShareUsageDescription": "Dew & Bloom reads your sleep and daily steps to gently grow your sanctuary."
+        "NSHealthShareUsageDescription": "Dewy reads your sleep and daily steps to gently grow your sanctuary."
       }
     },
     "android": {
-      "package": "com.dewbloom.app",
+      "package": "com.dewy.garden",
       "permissions": [
         "android.permission.health.READ_STEPS",
         "android.permission.health.READ_SLEEP"
@@ -45,7 +45,7 @@
       [
         "@kingstinct/react-native-healthkit",
         {
-          "NSHealthShareUsageDescription": "Dew & Bloom reads your sleep and daily steps to gently grow your sanctuary."
+          "NSHealthShareUsageDescription": "Dewy reads your sleep and daily steps to gently grow your sanctuary."
         }
       ],
       "react-native-health-connect",

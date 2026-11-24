@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   Archive,
+  Camera,
   Droplets,
   Moon,
   Move,
@@ -14,6 +15,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FieldSnapModal } from '@/components/FieldSnapModal';
 import { GoodnightLanternModal } from '@/components/GoodnightLanternModal';
 import { IsometricCanvas } from '@/components/IsometricCanvas';
 import { MorningRevealModal } from '@/components/MorningRevealModal';
@@ -100,6 +102,7 @@ export default function SanctuaryScreen() {
   const waterPlacedItem = useSanctuaryStore((s) => s.waterPlacedItem);
   const startLantern = useSanctuaryStore((s) => s.startLantern);
   const awardBedtimeDew = useSanctuaryStore((s) => s.awardBedtimeDew);
+  const applyFieldSnapReward = useSanctuaryStore((s) => s.applyFieldSnapReward);
   const finishLantern = useSanctuaryStore((s) => s.finishLantern);
   const triggerMorningReveal = useSanctuaryStore((s) => s.triggerMorningReveal);
   const dismissPendingReveal = useSanctuaryStore((s) => s.dismissPendingReveal);
@@ -112,6 +115,7 @@ export default function SanctuaryScreen() {
   const wateredTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [lanternModalOpen, setLanternModalOpen] = useState(false);
+  const [fieldSnapModalOpen, setFieldSnapModalOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [checkInModalOpen, setCheckInModalOpen] = useState(false);
   const [selectedRestId, setSelectedRestId] = useState<string>('restful');
@@ -411,6 +415,20 @@ export default function SanctuaryScreen() {
         />
 
         <View pointerEvents="box-none" style={styles.topSubRow}>
+          <Pressable
+            onPress={() => {
+              hapticSelection();
+              setFieldSnapModalOpen(true);
+            }}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Open Outdoor Field Snap"
+            style={styles.duoPill}
+          >
+            <Camera size={16} strokeWidth={1.6} color={palette.accentMoss} />
+            <Text style={styles.duoPillText}>Snap</Text>
+          </Pressable>
+
           <Pressable
             onPress={() => {
               hapticSelection();
@@ -801,6 +819,21 @@ export default function SanctuaryScreen() {
         windowDays={harmony.windowDays}
         onClose={() => setShareModalOpen(false)}
       />
+
+      <FieldSnapModal
+        visible={fieldSnapModalOpen}
+        isPro={profile.isPro}
+        ownedItemIds={ownedItemIds}
+        onApplyReward={applyFieldSnapReward}
+        onPlantInMeadow={(itemId) => {
+          setFieldSnapModalOpen(false);
+          setPlacingItemId(itemId);
+          setMovingPlacementId(null);
+          setSelectedPlacementId(null);
+          setFeedbackMessage(null);
+        }}
+        onClose={() => setFieldSnapModalOpen(false)}
+      />
     </View>
   );
 }
@@ -819,6 +852,7 @@ const styles = StyleSheet.create({
   topSubRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    gap: spacing.xs,
     paddingHorizontal: spacing.lg,
     marginTop: spacing.xs,
   },

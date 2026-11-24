@@ -183,7 +183,7 @@ export default function PaywallScreen() {
               <LiquidDewEmblem size={56} />
               <View style={styles.eyebrowPill}>
                 <Sparkles size={14} strokeWidth={1.5} color={palette.accentMoss} />
-                <Text style={styles.eyebrowText}>Dew & Bloom Pro</Text>
+                <Text style={styles.eyebrowText}>Dewy Pro</Text>
               </View>
             </View>
             <Text style={styles.title}>Grow a deeper sanctuary</Text>

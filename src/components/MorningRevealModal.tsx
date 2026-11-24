@@ -153,6 +153,8 @@ export function MorningRevealModal({
   const ctaLabel = reveal.alreadyRevealed
     ? 'Return to meadow'
     : 'Clear morning mist';
+  const showMomentum =
+    (reveal.momentumMultiplier ?? 1) > 1 && Boolean(reveal.momentumLabel);
 
   return (
     <Modal
@@ -196,6 +198,15 @@ export function MorningRevealModal({
 
           <Text style={styles.title}>Morning reveal</Text>
           <Text style={styles.subtitle}>{subtitle}</Text>
+
+          {showMomentum ? (
+            <View style={styles.momentumPill}>
+              <Sparkles size={13} strokeWidth={1.6} color={palette.accentDew} />
+              <Text style={styles.momentumText}>
+                {`${reveal.momentumLabel} · ${reveal.momentumMultiplier}x Dew`}
+              </Text>
+            </View>
+          ) : null}
 
           <View style={styles.summaryGrid}>
             <Animated.View style={[styles.metricCard, restTileAnimatedStyle]}>
@@ -325,6 +336,25 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: palette.textSecondary,
     marginTop: -spacing.md,
+  },
+  momentumPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: spacing.xs,
+    backgroundColor: 'rgba(137, 178, 198, 0.14)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(137, 178, 198, 0.36)',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.full,
+    marginTop: -spacing.xs,
+  },
+  momentumText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12,
+    color: palette.accentDew,
+    fontVariant: ['tabular-nums'],
   },
   summaryGrid: {
     flexDirection: 'row',

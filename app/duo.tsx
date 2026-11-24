@@ -154,7 +154,7 @@ export default function DuoScreen() {
     }
     try {
       await Share.share({
-        message: `Join my Dew & Bloom shared meadow with invite code ${garden.inviteCode}.`,
+        message: `Join my Dewy shared meadow with invite code ${garden.inviteCode}.`,
       });
       setNotice(`Invite code ${garden.inviteCode} ready to share.`);
     } catch {
@@ -170,7 +170,7 @@ export default function DuoScreen() {
     setErrorMessage(null);
     try {
       await Share.share({
-        message: `Grow a shared meadow with me in Dew & Bloom. Invite code: ${garden.inviteCode}`,
+        message: `Grow a shared meadow with me in Dewy. Invite code: ${garden.inviteCode}`,
       });
     } catch {
       setNotice(`Share code ${garden.inviteCode} with your partner.`);

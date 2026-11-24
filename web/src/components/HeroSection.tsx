@@ -39,11 +39,11 @@ export function HeroSection() {
               morning mist in sixty calm seconds—no streak-death, no manual logging.
             </p>
 
-            <div id="download" className="download-dock liquid-glass" role="group" aria-label="Download Dew & Bloom">
+            <div id="download" className="download-dock liquid-glass" role="group" aria-label="Download Dewy">
               <a
                 className="store-btn store-btn-primary"
                 href="#pricing"
-                aria-label="Download Dew & Bloom on the App Store"
+                aria-label="Download Dewy on the App Store"
               >
                 <AppleIcon />
                 <span className="store-btn-text">
@@ -55,7 +55,7 @@ export function HeroSection() {
               <a
                 className="store-btn store-btn-secondary"
                 href="#pricing"
-                aria-label="Get Dew & Bloom on Google Play"
+                aria-label="Get Dewy on Google Play"
               >
                 <PlayStoreIcon />
                 <span className="store-btn-text">

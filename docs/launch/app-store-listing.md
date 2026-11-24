@@ -1,17 +1,17 @@
-# Dew & Bloom — App Store & Google Play Launch Kit
+# Dewy — App Store & Google Play Launch Kit
 
-> **Bundle ID / Package:** `com.dewbloom.app`  
+> **Bundle ID / Package:** `com.dewy.garden`  
 > **Primary Category:** Health & Fitness  
 > **Secondary Category:** Lifestyle  
-> **Pricing:** Free with In-App Purchases (*Dew & Bloom Pro*: $19.99/yr with 7-day free trial, $2.99/mo, $39.99 Lifetime)
+> **Pricing:** Free with In-App Purchases (*Dewy Pro*: $19.99/yr with 7-day free trial, $2.99/mo, $39.99 Lifetime)
 
 ---
 
 ## 1. Store Metadata (Ready to Paste)
 
 ### App Title (30 chars max)
-- **App Store (27/30):** `Dew & Bloom: Sleep & Steps`
-- **Google Play (27/30):** `Dew & Bloom: Sleep & Steps`
+- **App Store (25/30):** `Dewy: Sleep & Walk Garden`
+- **Google Play (25/30):** `Dewy: Sleep & Walk Garden`
 
 ### Subtitle / Short Description
 - **App Store Subtitle (29/30):** `Grow a cozy living sanctuary`
@@ -28,7 +28,7 @@
 ```text
 Your sleep and daily steps automatically grow a cozy, living sanctuary on your phone — zero manual logging, zero guilt.
 
-Most habit trackers punish you with broken streaks the moment life gets busy. Dew & Bloom takes a gentler approach. Restful nights gather Morning Dew, and daily walks bring Warm Sunlight. If you have a rough night or miss a day, nothing dies — a soft morning mist settles over your meadow and clears naturally on your next good rest.
+Most habit trackers punish you with broken streaks the moment life gets busy. Dewy takes a gentler approach. Restful nights gather Morning Dew, and daily walks bring Warm Sunlight. If you have a rough night or miss a day, nothing dies — a soft morning mist settles over your meadow and clears naturally on your next good rest.
 
 HOW IT WORKS
 1. Set your rhythm: Pick a sustainable sleep goal (6–10 hours) and daily step target.
@@ -46,8 +46,8 @@ DESIGNED FOR CALM CONSISTENCY
 PRIVATE BY DESIGN
 Your sleep and step records are used solely to grow your garden and generate your personal Keeper notes. Health data is never sold and never shared with ad networks. Optional non-personalized rewarded videos are available in the free tier and are never shown to Pro members.
 
-DEW & BLOOM PRO (OPTIONAL)
-Start with a free meadow forever, or try Dew & Bloom Pro free for 7 days ($19.99/year, $2.99/month, or $39.99 Lifetime) to unlock all 35+ seasonal plants, stone lanterns, rare critters, deeper Keeper insights, Duo shared meadow perks, cloud backup, and zero ad prompts.
+DEWY PRO (OPTIONAL)
+Start with a free meadow forever, or try Dewy Pro free for 7 days ($19.99/year, $2.99/month, or $39.99 Lifetime) to unlock all 35+ seasonal plants, stone lanterns, rare critters, deeper Keeper insights, Duo shared meadow perks, cloud backup, and zero ad prompts.
 
 Questions or feedback? Reach us anytime from Settings inside the app.
 ```
@@ -60,19 +60,19 @@ Questions or feedback? Reach us anytime from Settings inside the app.
 - **Visual:** Overhead shot of someone waking up, checking phone in soft morning light, tapping *Clear mist* on the Morning Reveal modal.
 - **Hook (0–3s, on-screen text):** `I quit every habit app that punished me for sleeping 5 hours`
 - **Body (3–15s):** "Every tracker I tried deleted my streak the second I had one rough night. This app just puts a gentle morning fog over my garden — nothing dies. When I get good sleep, I earn Dew. When I walk, I earn Sunlight. And I use it to plant little lavender, stone lanterns, and hedgehogs in my meadow."
-- **CTA (15–22s):** "Zero manual logging, works with Apple Health or just your phone. Search *Dew & Bloom* on the App Store."
+- **CTA (15–22s):** "Zero manual logging, works with Apple Health or just your phone. Search *Dewy* on the App Store."
 
 ### Script 2: "60-Second Morning Ritual" (18–22s)
-- **Visual:** Aesthetic desk / coffee pour → phone Home Screen showing the Dew & Bloom widget → tapping into the Sanctuary Canvas and placing a new Sakura Sapling.
+- **Visual:** Aesthetic desk / coffee pour → phone Home Screen showing the Dewy widget → tapping into the Sanctuary Canvas and placing a new Sakura Sapling.
 - **Hook (0–3s, on-screen text):** `My favorite 60-second morning ritual (no doomscrolling)`
 - **Body (3–14s):** "Instead of opening social media first thing, I open my garden. Last night's 7.5 hours of sleep gave me Morning Dew, yesterday's walk gave me Sunlight, and the AI Garden Keeper gave me one calm note about my week. Today I finally unlocked the koi pond."
-- **CTA (14–20s):** "Free to start on iOS & Android — link in bio for *Dew & Bloom*."
+- **CTA (14–20s):** "Free to start on iOS & Android — link in bio for *Dewy*."
 
 ### Script 3: "Phone-Only / No Smartwatch Needed" (20s)
 - **Visual:** Nightstand shot tapping *Goodnight Lantern* (warm twilight dark mode), cut to morning sunlight tapping *I'm Awake* and watching the Dew counter tick up.
 - **Hook (0–3s, on-screen text):** `You don't need an Apple Watch to fix your sleep schedule`
-- **Body (3–15s):** "If you don't wear a smartwatch to bed, *Dew & Bloom* has a Goodnight Lantern mode. Tap it before bed, put your phone down, and wake up to Morning Dew to grow your sanctuary. Plus it counts your phone's daily steps automatically."
-- **CTA (15–20s):** "Try *Dew & Bloom* free and plant your first seedling tonight."
+- **Body (3–15s):** "If you don't wear a smartwatch to bed, *Dewy* has a Goodnight Lantern mode. Tap it before bed, put your phone down, and wake up to Morning Dew to grow your sanctuary. Plus it counts your phone's daily steps automatically."
+- **CTA (15–20s):** "Try *Dewy* free and plant your first seedling tonight."
 
 ---
 

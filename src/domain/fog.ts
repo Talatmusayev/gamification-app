@@ -4,6 +4,7 @@ import {
   clampHealthInput,
 } from './economy';
 import { pickKeeperFallbackNote } from './keeperFallback';
+import { calculateRestMomentum } from './momentum';
 import type {
   DailyLog,
   FogLevel,
@@ -92,6 +93,11 @@ export function processMorningReveal(params: {
     ? params.existingLogs[params.dateKey]
     : undefined;
 
+  const momentum = calculateRestMomentum(
+    Object.values(params.existingLogs),
+    params.profile.sleepGoalMin,
+  );
+
   if (existingLog) {
     return {
       alreadyRevealed: true,
@@ -107,6 +113,9 @@ export function processMorningReveal(params: {
           false,
         ),
       log: existingLog,
+      momentumTier: momentum.tier,
+      momentumMultiplier: momentum.multiplier,
+      momentumLabel: momentum.label,
     };
   }
 
@@ -115,11 +124,12 @@ export function processMorningReveal(params: {
     steps: params.steps,
   });
 
-  const dewAwarded = calculateDewReward(
+  const baseDew = calculateDewReward(
     clamped.sleepMin,
     params.profile.sleepGoalMin,
     params.bedtimeOffsetMin,
   );
+  const dewAwarded = Math.round(baseDew * momentum.multiplier);
   const sunlightAwarded = calculateSunlightReward(
     clamped.steps,
     params.profile.stepGoal,
@@ -153,5 +163,8 @@ export function processMorningReveal(params: {
     newFogLevel,
     keeperNote,
     log,
+    momentumTier: momentum.tier,
+    momentumMultiplier: momentum.multiplier,
+    momentumLabel: momentum.label,
   };
 }

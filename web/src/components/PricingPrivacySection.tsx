@@ -58,7 +58,7 @@ export function PricingPrivacySection() {
           {/* Pro Tier */}
           <article className="pricing-card pricing-card-pro">
             <div className="pricing-top">
-              <h3 className="pricing-name">Dew &amp; Bloom Pro</h3>
+              <h3 className="pricing-name">Dewy Pro</h3>
               <span className="pricing-badge">7-day free trial</span>
             </div>
             <div className="pricing-price-row">
