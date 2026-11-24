@@ -3,6 +3,7 @@ import { BarChart2, Sprout, Store } from 'lucide-react-native';
 import { StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fonts, palette, spacing } from '@/theme/tokens';
+import { hapticSelection } from '@/utils/haptics';
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
@@ -10,6 +11,9 @@ export default function TabsLayout() {
 
   return (
     <Tabs
+      screenListeners={{
+        tabPress: () => hapticSelection(),
+      }}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: palette.accentMoss,

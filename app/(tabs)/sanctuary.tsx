@@ -13,6 +13,7 @@ import { calculateHarmonyScore } from '@/domain/fog';
 import type { GardenPlacement } from '@/domain/types';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
 import { fonts, nightPalette, palette, radii, spacing } from '@/theme/tokens';
+import { hapticLight, hapticMedium, hapticWarning } from '@/utils/haptics';
 
 function getTodayDateKey(): string {
   const now = new Date();
@@ -84,16 +85,20 @@ export default function SanctuaryScreen() {
     if (placingItemId && placingItem) {
       const result = placeCatalogItem(placingItemId, x, y);
       if (result.ok) {
+        hapticMedium();
         setPlacingItemId(null);
         if (placeItemId) {
           router.setParams({ placeItemId: undefined });
         }
         setFeedbackMessage(`Placed ${placingItem.name} in your meadow.`);
       } else if (result.reason === 'TILE_OCCUPIED') {
+        hapticWarning();
         setFeedbackMessage('That patch already holds something. Tap an open tile.');
       } else if (result.reason === 'INSUFFICIENT_FUNDS') {
+        hapticWarning();
         setFeedbackMessage('Gather a bit more Dew or Sunlight to place this item.');
       } else if (result.reason === 'PRO_REQUIRED') {
+        hapticWarning();
         setFeedbackMessage('This item is part of Sanctuary Pro.');
       }
       return;
@@ -102,9 +107,11 @@ export default function SanctuaryScreen() {
     if (movingPlacementId && movingItem) {
       const result = movePlacedItem(movingPlacementId, x, y);
       if (result.ok) {
+        hapticMedium();
         setMovingPlacementId(null);
         setFeedbackMessage(`Moved ${movingItem.name} to a new spot.`);
       } else if (result.reason === 'TILE_OCCUPIED') {
+        hapticWarning();
         setFeedbackMessage('That patch is occupied. Tap an open meadow tile.');
       }
     }
@@ -116,6 +123,7 @@ export default function SanctuaryScreen() {
       setMovingPlacementId(null);
       return;
     }
+    hapticLight();
     setPlacingItemId(null);
     setMovingPlacementId(placement.id);
   };

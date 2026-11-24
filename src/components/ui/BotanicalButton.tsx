@@ -1,7 +1,5 @@
-import * as Haptics from 'expo-haptics';
 import type { ReactNode } from 'react';
 import {
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -13,9 +11,11 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { fonts, motion, palette, radii, spacing } from '@/theme/tokens';
+import { fonts, palette, radii, spacing, springs } from '@/theme/tokens';
+import { hapticLight } from '@/utils/haptics';
 
 export type BotanicalButtonVariant = 'primary' | 'secondary' | 'ghost';
 
@@ -52,31 +52,41 @@ export function BotanicalButton({
 }: BotanicalButtonProps) {
   const reducedMotion = useReducedMotion();
   const scale = useSharedValue(1);
+  const translateY = useSharedValue(0);
+  const pressedOpacity = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    opacity: disabled ? 0.45 : pressedOpacity.value,
+    transform: [{ scale: scale.value }, { translateY: translateY.value }],
   }));
 
   const handlePressIn = () => {
-    if (disabled || reducedMotion) {
+    if (disabled) {
       return;
     }
-    scale.value = withTiming(0.98, { duration: motion.pressMs });
+    if (reducedMotion) {
+      pressedOpacity.value = withTiming(0.75, { duration: 110 });
+      return;
+    }
+    scale.value = withTiming(0.975, { duration: 110 });
+    translateY.value = withTiming(1.5, { duration: 110 });
   };
 
   const handlePressOut = () => {
     if (reducedMotion) {
+      pressedOpacity.value = withTiming(1, { duration: 110 });
       return;
     }
-    scale.value = withTiming(1, { duration: motion.pressMs });
+    scale.value = withSpring(1, springs.tactile);
+    translateY.value = withSpring(0, springs.tactile);
   };
 
   const handlePress = () => {
     if (disabled) {
       return;
     }
-    if (haptic && Platform.OS !== 'web') {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    if (haptic) {
+      hapticLight();
     }
     onPress();
   };
@@ -136,6 +146,13 @@ const styles = StyleSheet.create({
   },
   primary: {
     backgroundColor: palette.accentMoss,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.22)',
+    shadowColor: '#1E241E',
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
   },
   secondary: {
     backgroundColor: palette.surface,

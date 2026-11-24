@@ -1,6 +1,15 @@
 import { Droplets, Leaf, Sun } from 'lucide-react-native';
+import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { fonts, palette, radii, spacing } from '@/theme/tokens';
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import { fonts, palette, radii, spacing, springs } from '@/theme/tokens';
 
 export interface SanctuaryHudProps {
   dewBalance: number;
@@ -9,12 +18,35 @@ export interface SanctuaryHudProps {
   windowDays: number;
 }
 
+function useRewardPulse(value: number, reducedMotion: boolean) {
+  const prevRef = useRef(value);
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    if (value > prevRef.current && !reducedMotion) {
+      scale.value = withSequence(
+        withTiming(1.08, { duration: 90 }),
+        withSpring(1, springs.pop),
+      );
+    }
+    prevRef.current = value;
+  }, [value, reducedMotion, scale]);
+
+  return useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+}
+
 export function SanctuaryHud({
   dewBalance,
   sunlightBalance,
   restfulDays,
   windowDays,
 }: SanctuaryHudProps) {
+  const reducedMotion = Boolean(useReducedMotion());
+  const dewIconStyle = useRewardPulse(dewBalance, reducedMotion);
+  const sunlightIconStyle = useRewardPulse(sunlightBalance, reducedMotion);
+
   return (
     <View style={styles.container}>
       <View style={styles.currencyRow}>
@@ -23,7 +55,9 @@ export function SanctuaryHud({
           accessible
           accessibilityLabel={`${dewBalance} Dew`}
         >
-          <Droplets size={16} strokeWidth={1.5} color={palette.accentDew} />
+          <Animated.View style={dewIconStyle}>
+            <Droplets size={16} strokeWidth={1.5} color={palette.accentDew} />
+          </Animated.View>
           <Text style={styles.currencyValue}>{dewBalance}</Text>
         </View>
 
@@ -32,7 +66,9 @@ export function SanctuaryHud({
           accessible
           accessibilityLabel={`${sunlightBalance} Sunlight`}
         >
-          <Sun size={16} strokeWidth={1.5} color={palette.accentSunlight} />
+          <Animated.View style={sunlightIconStyle}>
+            <Sun size={16} strokeWidth={1.5} color={palette.accentSunlight} />
+          </Animated.View>
           <Text style={styles.currencyValue}>{sunlightBalance}</Text>
         </View>
       </View>

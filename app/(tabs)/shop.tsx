@@ -2,12 +2,14 @@ import { useRouter } from 'expo-router';
 import { Check, Droplets, Lock, Plus, Sun } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GardenSprite } from '@/components/ui/GardenSprite';
 import { SUNLIT_MEADOW_CATALOG } from '@/domain/catalog';
 import type { CatalogItem, ItemCategory } from '@/domain/types';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
 import { fonts, palette, radii, spacing } from '@/theme/tokens';
+import { hapticSelection } from '@/utils/haptics';
 
 type FilterTab = 'all' | ItemCategory;
 
@@ -20,6 +22,7 @@ const FILTER_TABS: readonly { id: FilterTab; label: string }[] = [
 
 export default function ShopScreen() {
   const router = useRouter();
+  const reducedMotion = useReducedMotion();
   const profile = useSanctuaryStore((s) => s.profile);
   const ownedItemIds = useSanctuaryStore((s) => s.ownedItemIds);
 
@@ -34,14 +37,19 @@ export default function ShopScreen() {
     );
   }, [selectedFilter]);
 
-  const handleSelectItem = (item: CatalogItem) => {
+  const handleSelectItem = (item: CatalogItem, isProLocked: boolean) => {
+    hapticSelection();
+    if (isProLocked) {
+      router.push('/paywall');
+      return;
+    }
     router.push({
       pathname: '/(tabs)/sanctuary',
       params: { placeItemId: item.id },
     });
   };
 
-  const renderItem = ({ item }: { item: CatalogItem }) => {
+  const renderItem = ({ item, index }: { item: CatalogItem; index: number }) => {
     const isOwned = ownedItemIds.includes(item.id);
     const isProLocked = item.isPro && !profile.isPro && !isOwned;
     const canAfford =
@@ -49,9 +57,13 @@ export default function ShopScreen() {
       (profile.dewBalance >= item.dewCost &&
         profile.sunlightBalance >= item.sunlightCost);
     const canPlace = !isProLocked && canAfford;
+    const entering =
+      !reducedMotion && index < 6
+        ? FadeInDown.delay(index * 35).duration(220)
+        : undefined;
 
     return (
-      <View style={styles.itemCard}>
+      <Animated.View entering={entering} style={styles.itemCard}>
         <View style={styles.spriteBox}>
           <GardenSprite assetKey={item.assetKey} size={50} />
         </View>
@@ -91,21 +103,21 @@ export default function ShopScreen() {
         </View>
 
         <Pressable
-          onPress={() => handleSelectItem(item)}
-          disabled={!canPlace}
+          onPress={() => handleSelectItem(item, isProLocked)}
+          disabled={!canPlace && !isProLocked}
           hitSlop={6}
           accessibilityRole="button"
           accessibilityLabel={
             isProLocked
-              ? `${item.name} requires Sanctuary Pro`
+              ? `Try Sanctuary Pro to unlock ${item.name}`
               : canPlace
                 ? `Place ${item.name} in sanctuary`
                 : `Not enough Dew or Sunlight for ${item.name}`
           }
-          accessibilityState={{ disabled: !canPlace }}
+          accessibilityState={{ disabled: !canPlace && !isProLocked }}
           style={[
             styles.placeButton,
-            !canPlace && styles.placeButtonDisabled,
+            !canPlace && !isProLocked && styles.placeButtonDisabled,
           ]}
         >
           {isProLocked ? (
@@ -126,7 +138,7 @@ export default function ShopScreen() {
             {isOwned ? 'Place' : isProLocked ? 'Pro' : 'Place'}
           </Text>
         </Pressable>
-      </View>
+      </Animated.View>
     );
   };
 
@@ -160,7 +172,12 @@ export default function ShopScreen() {
           return (
             <Pressable
               key={tab.id}
-              onPress={() => setSelectedFilter(tab.id)}
+              onPress={() => {
+                if (tab.id !== selectedFilter) {
+                  hapticSelection();
+                }
+                setSelectedFilter(tab.id);
+              }}
               hitSlop={4}
               accessibilityRole="tab"
               accessibilityLabel={`Filter by ${tab.label}`}
