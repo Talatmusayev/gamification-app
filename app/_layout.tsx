@@ -12,6 +12,7 @@ import {
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { registerNativeHealthProvider } from '@/services/nativeProviders';
 import { palette } from '@/theme/tokens';
 
 void SplashScreen.preventAutoHideAsync();
@@ -24,6 +25,10 @@ export default function RootLayout() {
     PlusJakartaSans_500Medium,
     PlusJakartaSans_600SemiBold,
   });
+
+  useEffect(() => {
+    registerNativeHealthProvider();
+  }, []);
 
   useEffect(() => {
     if (fontsLoaded || fontError) {

@@ -9,10 +9,20 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.dewbloom.app"
+      "bundleIdentifier": "com.dewbloom.app",
+      "entitlements": {
+        "com.apple.developer.healthkit": true
+      },
+      "infoPlist": {
+        "NSHealthShareUsageDescription": "Dew & Bloom reads your sleep and daily steps to gently grow your sanctuary."
+      }
     },
     "android": {
       "package": "com.dewbloom.app",
+      "permissions": [
+        "android.permission.health.READ_STEPS",
+        "android.permission.health.READ_SLEEP"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#FAF8F4",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -31,9 +41,22 @@
       "expo-font",
       "expo-splash-screen",
       "expo-secure-store",
-      "expo-build-properties",
-      "@kingstinct/react-native-healthkit",
-      "react-native-health-connect"
+      "expo-dev-client",
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "Dew & Bloom reads your sleep and daily steps to gently grow your sanctuary."
+        }
+      ],
+      "react-native-health-connect",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ]
     ]
   }
 }
