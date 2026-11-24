@@ -464,43 +464,55 @@ export default function SanctuaryScreen() {
           style={styles.careBarWrap}
         >
           <View style={styles.careBar}>
-            <View style={styles.careIdentity}>
-              <View style={styles.careSpriteWrap}>
-                <GardenSprite
-                  assetKey={selectedItem.assetKey}
-                  size={40}
-                  growthStage={selectedStage}
-                />
-              </View>
-              <View style={styles.careCopy}>
-                <Text style={styles.careTitle} numberOfLines={1}>
-                  {selectedItem.name}
-                </Text>
-                {selectedIsPlant ? (
-                  <View style={styles.careStagePill}>
-                    <View style={styles.careStageDots}>
-                      {([1, 2, 3] as const).map((dotStage) => (
-                        <View
-                          key={dotStage}
-                          style={[
-                            styles.careStageDot,
-                            dotStage <= selectedStage && styles.careStageDotFilled,
-                          ]}
-                        />
-                      ))}
-                    </View>
-                    <Text style={styles.careStageText}>
-                      {`${getGrowthLabel(selectedStage)} · ${selectedStage}/3`}
-                    </Text>
-                  </View>
-                ) : (
-                  <Text style={styles.careCategoryText}>
-                    {selectedItem.category === 'critter'
-                      ? 'Meadow companion'
-                      : 'Meadow decor'}
+            <View style={styles.careTopRow}>
+              <View style={styles.careIdentity}>
+                <View style={styles.careSpriteWrap}>
+                  <GardenSprite
+                    assetKey={selectedItem.assetKey}
+                    size={40}
+                    growthStage={selectedStage}
+                  />
+                </View>
+                <View style={styles.careCopy}>
+                  <Text style={styles.careTitle} numberOfLines={1}>
+                    {selectedItem.name}
                   </Text>
-                )}
+                  {selectedIsPlant ? (
+                    <View style={styles.careStagePill}>
+                      <View style={styles.careStageDots}>
+                        {([1, 2, 3] as const).map((dotStage) => (
+                          <View
+                            key={dotStage}
+                            style={[
+                              styles.careStageDot,
+                              dotStage <= selectedStage && styles.careStageDotFilled,
+                            ]}
+                          />
+                        ))}
+                      </View>
+                      <Text style={styles.careStageText}>
+                        {`${getGrowthLabel(selectedStage)} · ${selectedStage}/3`}
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.careCategoryText}>
+                      {selectedItem.category === 'critter'
+                        ? 'Meadow companion'
+                        : 'Meadow decor'}
+                    </Text>
+                  )}
+                </View>
               </View>
+
+              <Pressable
+                onPress={() => setSelectedPlacementId(null)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Close plant care"
+                style={styles.careCloseButton}
+              >
+                <X size={16} strokeWidth={1.6} color={palette.textSecondary} />
+              </Pressable>
             </View>
 
             <View style={styles.careActions}>
@@ -546,16 +558,6 @@ export default function SanctuaryScreen() {
               >
                 <Move size={15} strokeWidth={1.6} color={palette.textPrimary} />
                 <Text style={styles.careMoveLabel}>Move</Text>
-              </Pressable>
-
-              <Pressable
-                onPress={() => setSelectedPlacementId(null)}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel="Close plant care"
-                style={styles.careCloseButton}
-              >
-                <X size={16} strokeWidth={1.6} color={palette.textSecondary} />
               </Pressable>
             </View>
           </View>
@@ -881,6 +883,9 @@ const styles = StyleSheet.create({
     borderColor: palette.border,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
+    gap: spacing.sm,
+  },
+  careTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -944,9 +949,10 @@ const styles = StyleSheet.create({
   careActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
   careWaterButton: {
+    flex: 1,
     minHeight: 44,
     paddingHorizontal: spacing.md,
     borderRadius: radii.md,

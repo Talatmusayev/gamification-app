@@ -22,7 +22,7 @@ export default function TabsLayout() {
           backgroundColor: palette.bg,
           borderTopColor: palette.border,
           borderTopWidth: StyleSheet.hairlineWidth,
-          height: 56 + bottomInset,
+          height: 62 + bottomInset,
           paddingTop: spacing.xs,
           paddingBottom: bottomInset,
           elevation: 0,
