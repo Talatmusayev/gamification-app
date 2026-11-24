@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { getCatalogItemById } from '../domain/catalog';
+import { getCatalogItemById, SUNLIT_MEADOW_CATALOG } from '../domain/catalog';
 import { processMorningReveal } from '../domain/fog';
 import { movePlacement, validateAndPlaceItem } from '../domain/grid';
 import { completeLanternSession, startLanternSession } from '../domain/lantern';
@@ -22,6 +22,9 @@ export const SANCTUARY_STORAGE_KEY = 'dew-and-bloom-sanctuary-v1';
 
 const CENTER_TILE_X = 3;
 const CENTER_TILE_Y = 3;
+const STARTER_DEW_POUCH = 60;
+const STARTER_SUNLIGHT_POUCH = 60;
+const DEFAULT_BEDTIME_DEW = 10;
 
 export interface CompleteOnboardingInput {
   sleepGoalMin: number;
@@ -60,6 +63,7 @@ export interface SanctuaryActions {
     toY: number,
   ) => ReturnType<typeof movePlacement>;
   startLantern: (nowIso?: string) => void;
+  awardBedtimeDew: (amount?: number) => void;
   finishLantern: (nowIso?: string, steps?: number) => MorningRevealResult | null;
   dismissPendingReveal: () => void;
   setPendingReveal: (reveal: MorningRevealResult | null) => void;
@@ -117,19 +121,50 @@ export const useSanctuaryStore = create<SanctuaryStore>()(
 
       completeOnboarding: (input) => {
         const starterItem = getCatalogItemById(input.starterItemId);
+        const starterDecor =
+          getCatalogItemById('stepping_stone') ??
+          SUNLIT_MEADOW_CATALOG.find(
+            (item) => item.category === 'decor' && !item.isPro,
+          );
+        const starterFlora =
+          (input.starterItemId !== 'meadow_daisy'
+            ? getCatalogItemById('meadow_daisy')
+            : undefined) ??
+          SUNLIT_MEADOW_CATALOG.find(
+            (item) =>
+              item.category === 'plant' &&
+              !item.isPro &&
+              item.id !== input.starterItemId,
+          );
+
+        const starterNook: Array<{
+          item: ReturnType<typeof getCatalogItemById>;
+          x: number;
+          y: number;
+        }> = [
+          { item: starterItem, x: CENTER_TILE_X, y: CENTER_TILE_Y },
+          { item: starterDecor, x: 4, y: 3 },
+          { item: starterFlora, x: 2, y: 4 },
+        ];
+
         let placements: GardenPlacement[] = [];
         let ownedItemIds: string[] = [];
 
-        if (starterItem) {
-          ownedItemIds = [starterItem.id];
+        for (const entry of starterNook) {
+          if (!entry.item) {
+            continue;
+          }
+          if (!ownedItemIds.includes(entry.item.id)) {
+            ownedItemIds = [...ownedItemIds, entry.item.id];
+          }
           const placed = validateAndPlaceItem({
-            item: starterItem,
-            x: CENTER_TILE_X,
-            y: CENTER_TILE_Y,
-            placements: [],
+            item: entry.item,
+            x: entry.x,
+            y: entry.y,
+            placements,
             ownedItemIds,
-            dewBalance: 0,
-            sunlightBalance: 0,
+            dewBalance: STARTER_DEW_POUCH,
+            sunlightBalance: STARTER_SUNLIGHT_POUCH,
             isPro: false,
           });
           if (placed.ok) {
@@ -143,8 +178,8 @@ export const useSanctuaryStore = create<SanctuaryStore>()(
             sleepGoalMin: input.sleepGoalMin,
             stepGoal: input.stepGoal,
             trackingMode: input.trackingMode,
-            dewBalance: 0,
-            sunlightBalance: 0,
+            dewBalance: STARTER_DEW_POUCH,
+            sunlightBalance: STARTER_SUNLIGHT_POUCH,
             fogLevel: 0,
             isPro: false,
             onboardingCompleted: true,
@@ -240,6 +275,20 @@ export const useSanctuaryStore = create<SanctuaryStore>()(
       startLantern: (nowIso) => {
         const session = startLanternSession(nowIso ?? new Date().toISOString());
         set({ activeLantern: session });
+      },
+
+      awardBedtimeDew: (amount = DEFAULT_BEDTIME_DEW) => {
+        const bonus = Math.max(0, Math.round(Number.isFinite(amount) ? amount : 0));
+        if (bonus === 0) {
+          return;
+        }
+        set((state) => ({
+          profile: {
+            ...state.profile,
+            dewBalance: state.profile.dewBalance + bonus,
+          },
+        }));
+        syncWidgetSnapshot(get());
       },
 
       finishLantern: (nowIso, steps = 0) => {

@@ -202,117 +202,167 @@ export default function InsightsScreen() {
           </Text>
         </View>
 
-        <View style={styles.harmonyCard}>
-          <View style={styles.harmonyTop}>
+        {allLogs.length === 0 ? (
+          <View style={styles.firstBloomCard}>
             <View style={styles.iconLabelRow}>
-              <Leaf size={16} strokeWidth={1.6} color={palette.accentMoss} />
-              <Text style={styles.sectionLabel}>Rolling harmony</Text>
+              <Sparkles size={16} strokeWidth={1.6} color={palette.accentMoss} />
+              <Text style={styles.sectionLabel}>First Bloom · 3-Day Journey</Text>
             </View>
-            <Text style={styles.harmonyHeadline}>
-              {harmony.restfulDays} of {harmony.windowDays} restful days
+            <Text style={styles.firstBloomTitle}>
+              Three restful mornings awaken your meadow
             </Text>
-          </View>
-
-          <View style={styles.avgRow}>
-            <View style={styles.avgCell}>
-              <Text style={styles.avgLabel}>Average rest</Text>
-              <Text style={styles.avgValue}>
-                {averages.avgSleepMin > 0
-                  ? formatSleepDuration(averages.avgSleepMin)
-                  : '—'}
-              </Text>
-            </View>
-            <View style={styles.avgDivider} />
-            <View style={styles.avgCell}>
-              <Text style={styles.avgLabel}>Average steps</Text>
-              <Text style={styles.avgValue}>
-                {averages.avgSteps > 0 ? averages.avgSteps.toLocaleString() : '—'}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* 7-day Sleep Chart */}
-        <View style={styles.chartCard}>
-          <View style={styles.chartHeader}>
-            <View style={styles.iconLabelRow}>
-              <Moon size={16} strokeWidth={1.5} color={palette.accentDew} />
-              <Text style={styles.chartTitle}>Rest</Text>
-            </View>
-            <Text style={styles.goalText}>
-              Goal {formatSleepDuration(profile.sleepGoalMin)}
+            <Text style={styles.firstBloomBody}>
+              Each morning reveal clears lingering mist, gathers Dew and Sunlight
+              for your clearing, and brings your first visiting critter closer to
+              home.
             </Text>
-          </View>
 
-          <View style={styles.barsRow}>
-            {sevenDaySeries.map((point) => {
-              const barHeight =
-                point.sleepMin > 0
-                  ? Math.max(8, Math.round((point.sleepMin / maxSleepMin) * BAR_MAX_HEIGHT))
-                  : 4;
-              const hoursLabel =
-                point.sleepMin > 0
-                  ? `${(point.sleepMin / 60).toFixed(1)}h`
-                  : '—';
-
-              return (
-                <View key={`sleep_${point.dateKey}`} style={styles.barColumn}>
-                  <Text style={styles.barTopValue}>{hoursLabel}</Text>
-                  <View style={styles.barTrack}>
-                    <AnimatedBar
-                      targetHeight={barHeight}
-                      color={
-                        point.sleepMin > 0 ? palette.accentDew : palette.border
-                      }
-                      reducedMotion={reducedMotion}
-                    />
-                  </View>
-                  <Text style={styles.barDayLabel}>{point.dayLabel}</Text>
+            <View style={styles.milestoneRow}>
+              <View style={styles.milestoneStep}>
+                <View style={styles.milestoneDot}>
+                  <Text style={styles.milestoneNum}>1</Text>
                 </View>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* 7-day Steps Chart */}
-        <View style={styles.chartCard}>
-          <View style={styles.chartHeader}>
-            <View style={styles.iconLabelRow}>
-              <Footprints size={16} strokeWidth={1.5} color={palette.accentSunlight} />
-              <Text style={styles.chartTitle}>Steps</Text>
+                <Text style={styles.milestoneLabel}>First dew</Text>
+              </View>
+              <View style={styles.milestoneLine} />
+              <View style={styles.milestoneStep}>
+                <View style={styles.milestoneDot}>
+                  <Text style={styles.milestoneNum}>2</Text>
+                </View>
+                <Text style={styles.milestoneLabel}>Mist clears</Text>
+              </View>
+              <View style={styles.milestoneLine} />
+              <View style={styles.milestoneStep}>
+                <View style={styles.milestoneDot}>
+                  <Text style={styles.milestoneNum}>3</Text>
+                </View>
+                <Text style={styles.milestoneLabel}>Critter visits</Text>
+              </View>
             </View>
-            <Text style={styles.goalText}>
-              Goal {profile.stepGoal.toLocaleString()}
-            </Text>
+
+            <BotanicalButton
+              label="Open morning check-in"
+              variant="primary"
+              onPress={() => router.push('/(tabs)/sanctuary')}
+              fullWidth
+              accessibilityLabel="Open morning check-in in sanctuary"
+            />
           </View>
+        ) : (
+          <>
+            <View style={styles.harmonyCard}>
+              <View style={styles.harmonyTop}>
+                <View style={styles.iconLabelRow}>
+                  <Leaf size={16} strokeWidth={1.6} color={palette.accentMoss} />
+                  <Text style={styles.sectionLabel}>Rolling harmony</Text>
+                </View>
+                <Text style={styles.harmonyHeadline}>
+                  {harmony.restfulDays} of {harmony.windowDays} restful days
+                </Text>
+              </View>
 
-          <View style={styles.barsRow}>
-            {sevenDaySeries.map((point) => {
-              const barHeight =
-                point.steps > 0
-                  ? Math.max(8, Math.round((point.steps / maxSteps) * BAR_MAX_HEIGHT))
-                  : 4;
-
-              return (
-                <View key={`steps_${point.dateKey}`} style={styles.barColumn}>
-                  <Text style={styles.barTopValue}>
-                    {point.steps > 0 ? formatCompactSteps(point.steps) : '—'}
+              <View style={styles.avgRow}>
+                <View style={styles.avgCell}>
+                  <Text style={styles.avgLabel}>Average rest</Text>
+                  <Text style={styles.avgValue}>
+                    {averages.avgSleepMin > 0
+                      ? formatSleepDuration(averages.avgSleepMin)
+                      : '—'}
                   </Text>
-                  <View style={styles.barTrack}>
-                    <AnimatedBar
-                      targetHeight={barHeight}
-                      color={
-                        point.steps > 0 ? palette.accentSunlight : palette.border
-                      }
-                      reducedMotion={reducedMotion}
-                    />
-                  </View>
-                  <Text style={styles.barDayLabel}>{point.dayLabel}</Text>
                 </View>
-              );
-            })}
-          </View>
-        </View>
+                <View style={styles.avgDivider} />
+                <View style={styles.avgCell}>
+                  <Text style={styles.avgLabel}>Average steps</Text>
+                  <Text style={styles.avgValue}>
+                    {averages.avgSteps > 0 ? averages.avgSteps.toLocaleString() : '—'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* 7-day Sleep Chart */}
+            <View style={styles.chartCard}>
+              <View style={styles.chartHeader}>
+                <View style={styles.iconLabelRow}>
+                  <Moon size={16} strokeWidth={1.5} color={palette.accentDew} />
+                  <Text style={styles.chartTitle}>Rest</Text>
+                </View>
+                <Text style={styles.goalText}>
+                  Goal {formatSleepDuration(profile.sleepGoalMin)}
+                </Text>
+              </View>
+
+              <View style={styles.barsRow}>
+                {sevenDaySeries.map((point) => {
+                  const barHeight =
+                    point.sleepMin > 0
+                      ? Math.max(8, Math.round((point.sleepMin / maxSleepMin) * BAR_MAX_HEIGHT))
+                      : 4;
+                  const hoursLabel =
+                    point.sleepMin > 0
+                      ? `${(point.sleepMin / 60).toFixed(1)}h`
+                      : '—';
+
+                  return (
+                    <View key={`sleep_${point.dateKey}`} style={styles.barColumn}>
+                      <Text style={styles.barTopValue}>{hoursLabel}</Text>
+                      <View style={styles.barTrack}>
+                        <AnimatedBar
+                          targetHeight={barHeight}
+                          color={
+                            point.sleepMin > 0 ? palette.accentDew : palette.border
+                          }
+                          reducedMotion={reducedMotion}
+                        />
+                      </View>
+                      <Text style={styles.barDayLabel}>{point.dayLabel}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* 7-day Steps Chart */}
+            <View style={styles.chartCard}>
+              <View style={styles.chartHeader}>
+                <View style={styles.iconLabelRow}>
+                  <Footprints size={16} strokeWidth={1.5} color={palette.accentSunlight} />
+                  <Text style={styles.chartTitle}>Steps</Text>
+                </View>
+                <Text style={styles.goalText}>
+                  Goal {profile.stepGoal.toLocaleString()}
+                </Text>
+              </View>
+
+              <View style={styles.barsRow}>
+                {sevenDaySeries.map((point) => {
+                  const barHeight =
+                    point.steps > 0
+                      ? Math.max(8, Math.round((point.steps / maxSteps) * BAR_MAX_HEIGHT))
+                      : 4;
+
+                  return (
+                    <View key={`steps_${point.dateKey}`} style={styles.barColumn}>
+                      <Text style={styles.barTopValue}>
+                        {point.steps > 0 ? formatCompactSteps(point.steps) : '—'}
+                      </Text>
+                      <View style={styles.barTrack}>
+                        <AnimatedBar
+                          targetHeight={barHeight}
+                          color={
+                            point.steps > 0 ? palette.accentSunlight : palette.border
+                          }
+                          reducedMotion={reducedMotion}
+                        />
+                      </View>
+                      <Text style={styles.barDayLabel}>{point.dayLabel}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          </>
+        )}
 
         {/* Garden Keeper Insight Card */}
         <View style={styles.keeperCard}>
@@ -536,5 +586,63 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: palette.textSecondary,
     fontVariant: ['tabular-nums'],
+  },
+  firstBloomCard: {
+    backgroundColor: palette.surfaceElevated,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: palette.border,
+    padding: spacing.xl,
+    gap: spacing.md,
+  },
+  firstBloomTitle: {
+    fontFamily: fonts.displaySemiBold,
+    fontSize: 20,
+    lineHeight: 26,
+    color: palette.textPrimary,
+  },
+  firstBloomBody: {
+    fontFamily: fonts.body,
+    fontSize: 14,
+    lineHeight: 21,
+    color: palette.textSecondary,
+  },
+  milestoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.sm,
+  },
+  milestoneStep: {
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  milestoneDot: {
+    width: 30,
+    height: 30,
+    borderRadius: radii.full,
+    backgroundColor: palette.surface,
+    borderWidth: 1,
+    borderColor: palette.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  milestoneNum: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 13,
+    color: palette.accentMoss,
+    fontVariant: ['tabular-nums'],
+  },
+  milestoneLabel: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12,
+    color: palette.textSecondary,
+  },
+  milestoneLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: palette.border,
+    marginBottom: spacing.lg,
+    marginHorizontal: spacing.xs,
   },
 });
