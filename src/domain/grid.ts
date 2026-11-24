@@ -88,6 +88,7 @@ export function validateAndPlaceItem(params: PlaceItemParams): PlaceItemResult {
     x,
     y,
     placedAt: new Date().toISOString(),
+    growthStage: item.category === 'plant' ? 1 : 3,
   };
 
   return {

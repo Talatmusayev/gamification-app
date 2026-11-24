@@ -364,6 +364,10 @@ export const SUNLIT_MEADOW_CATALOG: readonly CatalogItem[] = [
   },
 ] as const;
 
+export const CATALOG_BY_ID: Record<string, CatalogItem> = Object.fromEntries(
+  SUNLIT_MEADOW_CATALOG.map((item) => [item.id, item]),
+);
+
 export function getCatalogItemById(id: string): CatalogItem | undefined {
-  return SUNLIT_MEADOW_CATALOG.find((item) => item.id === id);
+  return CATALOG_BY_ID[id];
 }
