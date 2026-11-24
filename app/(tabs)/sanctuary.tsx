@@ -143,6 +143,8 @@ export default function SanctuaryScreen() {
       setFeedbackMessage(
         'Lantern closed. Rest sessions over 1 hour gather morning dew.',
       );
+    } else if (result.alreadyRevealed) {
+      setPendingReveal(result);
     }
   };
 

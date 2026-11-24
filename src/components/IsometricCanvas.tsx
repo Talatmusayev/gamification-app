@@ -125,38 +125,47 @@ export function IsometricCanvas({
     }
   }, [fogLevel, fogOpacity, reducedMotion]);
 
-  const panGesture = Gesture.Pan()
-    .minDistance(6)
-    .onUpdate((event) => {
-      translateX.value = clampWorklet(
-        savedTranslateX.value + event.translationX,
-        -MAX_PAN_X,
-        MAX_PAN_X,
-      );
-      translateY.value = clampWorklet(
-        savedTranslateY.value + event.translationY,
-        -MAX_PAN_Y,
-        MAX_PAN_Y,
-      );
-    })
-    .onEnd(() => {
-      savedTranslateX.value = translateX.value;
-      savedTranslateY.value = translateY.value;
-    });
+  const composedGesture = useMemo(() => {
+    const panGesture = Gesture.Pan()
+      .minDistance(6)
+      .onUpdate((event) => {
+        translateX.value = clampWorklet(
+          savedTranslateX.value + event.translationX,
+          -MAX_PAN_X,
+          MAX_PAN_X,
+        );
+        translateY.value = clampWorklet(
+          savedTranslateY.value + event.translationY,
+          -MAX_PAN_Y,
+          MAX_PAN_Y,
+        );
+      })
+      .onEnd(() => {
+        savedTranslateX.value = translateX.value;
+        savedTranslateY.value = translateY.value;
+      });
 
-  const pinchGesture = Gesture.Pinch()
-    .onUpdate((event) => {
-      scale.value = clampWorklet(
-        savedScale.value * event.scale,
-        MIN_SCALE,
-        MAX_SCALE,
-      );
-    })
-    .onEnd(() => {
-      savedScale.value = scale.value;
-    });
+    const pinchGesture = Gesture.Pinch()
+      .onUpdate((event) => {
+        scale.value = clampWorklet(
+          savedScale.value * event.scale,
+          MIN_SCALE,
+          MAX_SCALE,
+        );
+      })
+      .onEnd(() => {
+        savedScale.value = scale.value;
+      });
 
-  const composedGesture = Gesture.Simultaneous(panGesture, pinchGesture);
+    return Gesture.Simultaneous(panGesture, pinchGesture);
+  }, [
+    translateX,
+    translateY,
+    savedTranslateX,
+    savedTranslateY,
+    scale,
+    savedScale,
+  ]);
 
   const boardAnimatedStyle = useAnimatedStyle(() => ({
     transform: [

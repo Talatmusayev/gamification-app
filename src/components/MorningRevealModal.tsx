@@ -39,6 +39,19 @@ export function MorningRevealModal({
     onClearMist();
   };
 
+  const displayedDew = reveal.alreadyRevealed
+    ? reveal.log.dewAwarded
+    : reveal.dewAwarded;
+  const displayedSunlight = reveal.alreadyRevealed
+    ? reveal.log.sunlightAwarded
+    : reveal.sunlightAwarded;
+  const subtitle = reveal.alreadyRevealed
+    ? 'Collected earlier today.'
+    : 'Your sanctuary gathered quiet rest and movement from yesterday.';
+  const ctaLabel = reveal.alreadyRevealed
+    ? 'Return to meadow'
+    : 'Clear morning mist';
+
   return (
     <Modal
       visible={visible}
@@ -56,9 +69,7 @@ export function MorningRevealModal({
           </View>
 
           <Text style={styles.title}>Morning reveal</Text>
-          <Text style={styles.subtitle}>
-            Your sanctuary gathered quiet rest and movement from yesterday.
-          </Text>
+          <Text style={styles.subtitle}>{subtitle}</Text>
 
           <View style={styles.summaryGrid}>
             <View style={styles.metricCard}>
@@ -72,7 +83,7 @@ export function MorningRevealModal({
               <View style={styles.rewardBadge}>
                 <Droplets size={14} strokeWidth={1.6} color={palette.accentDew} />
                 <Text style={[styles.rewardText, styles.dewText]}>
-                  +{reveal.dewAwarded}
+                  +{displayedDew}
                 </Text>
                 <Text style={styles.rewardUnit}>Dew</Text>
               </View>
@@ -89,7 +100,7 @@ export function MorningRevealModal({
               <View style={styles.rewardBadge}>
                 <Sun size={14} strokeWidth={1.6} color={palette.accentSunlight} />
                 <Text style={[styles.rewardText, styles.sunlightText]}>
-                  +{reveal.sunlightAwarded}
+                  +{displayedSunlight}
                 </Text>
                 <Text style={styles.rewardUnit}>Sunlight</Text>
               </View>
@@ -102,11 +113,11 @@ export function MorningRevealModal({
           </View>
 
           <BotanicalButton
-            label="Clear morning mist"
+            label={ctaLabel}
             onPress={handleClearMist}
             fullWidth
-            accessibilityLabel="Clear morning mist"
-            accessibilityHint="Collect your morning rewards and return to the sunlit meadow"
+            accessibilityLabel={ctaLabel}
+            accessibilityHint="Return to the sunlit meadow"
           />
         </View>
       </View>

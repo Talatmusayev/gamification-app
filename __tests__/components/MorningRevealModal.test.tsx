@@ -101,6 +101,32 @@ describe('MorningRevealModal', () => {
     );
   });
 
+  it('shows original log rewards and Return to meadow CTA when alreadyRevealed is true', async () => {
+    const onClearMist = jest.fn();
+    const alreadyRevealedResult: MorningRevealResult = {
+      ...SAMPLE_REVEAL,
+      alreadyRevealed: true,
+      dewAwarded: 0,
+      sunlightAwarded: 0,
+    };
+
+    await render(
+      <MorningRevealModal
+        visible
+        reveal={alreadyRevealedResult}
+        onClearMist={onClearMist}
+      />,
+    );
+
+    expect(screen.getByText('Collected earlier today.')).toBeTruthy();
+    expect(screen.getByText('+68')).toBeTruthy();
+    expect(screen.getByText('+42')).toBeTruthy();
+
+    const button = screen.getByRole('button', { name: 'Return to meadow' });
+    fireEvent.press(button);
+    expect(onClearMist).toHaveBeenCalledTimes(1);
+  });
+
   it('renders nothing when reveal is null', async () => {
     await render(
       <MorningRevealModal visible reveal={null} onClearMist={jest.fn()} />,
