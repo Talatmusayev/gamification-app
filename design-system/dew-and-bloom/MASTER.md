@@ -1,6 +1,7 @@
 # Dew & Bloom — Master Design System (`MASTER.md`)
 
 > **Version:** 1.0 (Locked)  
+> **Figma Design File:** https://www.figma.com/design/kWT8rNHi5C7hcQ3qT1mX1i  
 > **Stack:** React Native + Expo Router + Reanimated + `react-native-svg` + `lucide-react-native`  
 > **Source of Truth:** Every screen, component, widget, and future subagent MUST read this file and consume `src/theme/tokens.ts` rather than inventing ad-hoc hex values, fonts, or timings.
 
