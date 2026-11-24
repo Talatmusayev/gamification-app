@@ -20,10 +20,10 @@ import { fonts, motion, palette, radii, spacing } from '@/theme/tokens';
 import { hapticSelection, hapticSuccess } from '@/utils/haptics';
 
 const PRO_BENEFITS = [
-  'All botanical flora, stone lanterns, and meadow critters',
+  'All 35+ botanical flora, stone lanterns, and meadow critters',
   'Deeper sleep and movement patterns with Keeper reflections',
-  'All Home Screen widget sizes synced with time of day',
-  'Cloud backup across devices with zero ads, ever',
+  'Duo shared meadow and cloud backup across devices',
+  'Zero rewarded ad prompts, ever',
 ] as const;
 
 export default function PaywallScreen() {

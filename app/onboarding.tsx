@@ -493,8 +493,8 @@ export default function OnboardingScreen() {
               <View style={styles.copyBlock}>
                 <Text style={styles.heading}>How would you like to track</Text>
                 <Text style={styles.body}>
-                  Start with your phone right away, or mark your preference for
-                  automatic health sync when it arrives.
+                  Start with your phone right away using Goodnight Lantern, or
+                  connect Apple Health and Health Connect for automatic sync.
                 </Text>
               </View>
 
@@ -553,7 +553,7 @@ export default function OnboardingScreen() {
                 <Pressable
                   onPress={() => handleSelectTracking('health_sync')}
                   accessibilityRole="button"
-                  accessibilityLabel="Health Sync, coming soon"
+                  accessibilityLabel="Health Sync, automatic Apple Health and Health Connect"
                   accessibilityState={{
                     selected: trackingMode === 'health_sync',
                   }}
@@ -573,7 +573,7 @@ export default function OnboardingScreen() {
                     </View>
                     <View style={styles.mutedBadge}>
                       <Text style={styles.mutedBadgeText}>
-                        Coming soon
+                        Automatic
                       </Text>
                     </View>
                     <View style={styles.spacer} />
@@ -596,8 +596,8 @@ export default function OnboardingScreen() {
 
                   <Text style={styles.optionTitle}>Health Sync</Text>
                   <Text style={styles.optionDescription}>
-                    Automatic Apple Health and Health Connect import arrives in
-                    a coming update. You can still use Goodnight Lantern today.
+                    Read sleep and daily steps automatically from Apple Health
+                    or Android Health Connect, with Goodnight Lantern anytime.
                   </Text>
                 </Pressable>
               </View>

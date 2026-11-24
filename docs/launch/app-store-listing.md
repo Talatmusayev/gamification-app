@@ -40,14 +40,14 @@ DESIGNED FOR CALM CONSISTENCY
 • Passive by default: No tedious forms, calorie math, or loud notifications.
 • Compassionate Garden Harmony: Tracks your rolling 7-day rhythm instead of brittle streaks.
 • Morning Fog, never streak-death: Your placed plants and critters stay in your meadow forever.
-• Home Screen Widgets: Keep your living sanctuary right on your home screen.
+• Duo Shared Meadow: Grow a calm sanctuary alongside a partner or close friend.
 • Shareable Progress Cards: Export a clean snapshot of your meadow to share with friends or family.
 
 PRIVATE BY DESIGN
-Your sleep and step records are used solely to grow your garden and generate your personal Keeper notes. Health data is never sold and never shared with ad networks.
+Your sleep and step records are used solely to grow your garden and generate your personal Keeper notes. Health data is never sold and never shared with ad networks. Optional non-personalized rewarded videos are available in the free tier and are never shown to Pro members.
 
 DEW & BLOOM PRO (OPTIONAL)
-Start with a free meadow forever, or try Dew & Bloom Pro free for 7 days ($19.99/year, $2.99/month, or $39.99 Lifetime) to unlock all 35+ seasonal plants, stone lanterns, rare critters, deeper Keeper insights, all Home Screen widget sizes, and cloud backup.
+Start with a free meadow forever, or try Dew & Bloom Pro free for 7 days ($19.99/year, $2.99/month, or $39.99 Lifetime) to unlock all 35+ seasonal plants, stone lanterns, rare critters, deeper Keeper insights, Duo shared meadow perks, cloud backup, and zero ad prompts.
 
 Questions or feedback? Reach us anytime from Settings inside the app.
 ```
