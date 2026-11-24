@@ -95,6 +95,24 @@ export const motion = {
   exitMs: 180,
 } as const;
 
+export const springs = {
+  tactile: { damping: 18, stiffness: 280, mass: 0.8 },
+  gentle: { damping: 20, stiffness: 180, mass: 0.9 },
+  pop: { damping: 14, stiffness: 260, mass: 0.7 },
+} as const;
+
+/**
+ * Cubic-bezier curves following slow-in, slow-out motion:
+ * - enter: ease-out for elements entering view
+ * - exit: ease-in for elements leaving view
+ * - move: ease-in-out for elements moving between positions
+ */
+export const easings = {
+  enter: [0.16, 1, 0.3, 1],
+  exit: [0.7, 0, 0.84, 0],
+  move: [0.65, 0, 0.35, 1],
+} as const;
+
 export type DayPalette = typeof palette;
 export type NightPalette = typeof nightPalette;
 export type Fonts = typeof fonts;
@@ -102,3 +120,5 @@ export type Typography = typeof typography;
 export type Spacing = typeof spacing;
 export type Radii = typeof radii;
 export type Motion = typeof motion;
+export type Springs = typeof springs;
+export type Easings = typeof easings;

@@ -1,10 +1,18 @@
 import * as Haptics from 'expo-haptics';
 import { Droplets, Footprints, Moon, Sparkles, Sun } from 'lucide-react-native';
+import { useEffect } from 'react';
 import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
-import { useReducedMotion } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withDelay,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { BotanicalButton } from '@/components/ui/BotanicalButton';
 import type { MorningRevealResult } from '@/domain/types';
-import { fonts, palette, radii, spacing } from '@/theme/tokens';
+import { fonts, motion, palette, radii, spacing, springs } from '@/theme/tokens';
 
 export interface MorningRevealModalProps {
   visible: boolean;
@@ -29,11 +37,87 @@ export function MorningRevealModal({
 }: MorningRevealModalProps) {
   const reducedMotion = useReducedMotion();
 
+  const sheetOpacity = useSharedValue(reducedMotion ? 1 : 0);
+  const sheetTranslateY = useSharedValue(reducedMotion ? 0 : 18);
+  const restTileOpacity = useSharedValue(reducedMotion ? 1 : 0);
+  const restTileTranslateY = useSharedValue(reducedMotion ? 0 : 12);
+  const stepsTileOpacity = useSharedValue(reducedMotion ? 1 : 0);
+  const stepsTileTranslateY = useSharedValue(reducedMotion ? 0 : 12);
+  const keeperOpacity = useSharedValue(reducedMotion ? 1 : 0);
+
+  useEffect(() => {
+    if (!visible || !reveal) {
+      return;
+    }
+    if (reducedMotion) {
+      sheetOpacity.value = 1;
+      sheetTranslateY.value = 0;
+      restTileOpacity.value = 1;
+      restTileTranslateY.value = 0;
+      stepsTileOpacity.value = 1;
+      stepsTileTranslateY.value = 0;
+      keeperOpacity.value = 1;
+      return;
+    }
+
+    sheetOpacity.value = 0;
+    sheetTranslateY.value = 18;
+    restTileOpacity.value = 0;
+    restTileTranslateY.value = 12;
+    stepsTileOpacity.value = 0;
+    stepsTileTranslateY.value = 12;
+    keeperOpacity.value = 0;
+
+    sheetOpacity.value = withTiming(1, { duration: motion.enterMs });
+    sheetTranslateY.value = withSpring(0, springs.gentle);
+
+    restTileOpacity.value = withDelay(45, withTiming(1, { duration: 220 }));
+    restTileTranslateY.value = withDelay(45, withSpring(0, springs.gentle));
+
+    stepsTileOpacity.value = withDelay(90, withTiming(1, { duration: 220 }));
+    stepsTileTranslateY.value = withDelay(90, withSpring(0, springs.gentle));
+
+    keeperOpacity.value = withDelay(135, withTiming(1, { duration: 220 }));
+  }, [
+    visible,
+    reveal,
+    reducedMotion,
+    sheetOpacity,
+    sheetTranslateY,
+    restTileOpacity,
+    restTileTranslateY,
+    stepsTileOpacity,
+    stepsTileTranslateY,
+    keeperOpacity,
+  ]);
+
+  const sheetAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: sheetOpacity.value,
+    transform: [{ translateY: sheetTranslateY.value }],
+  }));
+
+  const restTileAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: restTileOpacity.value,
+    transform: [{ translateY: restTileTranslateY.value }],
+  }));
+
+  const stepsTileAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: stepsTileOpacity.value,
+    transform: [{ translateY: stepsTileTranslateY.value }],
+  }));
+
+  const keeperAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: keeperOpacity.value,
+  }));
+
   if (!visible || !reveal) {
     return null;
   }
 
   const handleClearMist = () => {
+    if (!reducedMotion) {
+      sheetOpacity.value = withTiming(0, { duration: 140 });
+    }
     if (!reveal.alreadyRevealed && Platform.OS !== 'web') {
       void Haptics.notificationAsync(
         Haptics.NotificationFeedbackType.Success,
@@ -63,7 +147,10 @@ export function MorningRevealModal({
       onRequestClose={handleClearMist}
     >
       <View style={styles.backdrop}>
-        <View style={styles.sheet} accessibilityViewIsModal>
+        <Animated.View
+          style={[styles.sheet, sheetAnimatedStyle]}
+          accessibilityViewIsModal
+        >
           <View style={styles.headerRow}>
             <View style={styles.eyebrowPill}>
               <Sparkles size={14} strokeWidth={1.6} color={palette.accentMoss} />
@@ -75,7 +162,7 @@ export function MorningRevealModal({
           <Text style={styles.subtitle}>{subtitle}</Text>
 
           <View style={styles.summaryGrid}>
-            <View style={styles.metricCard}>
+            <Animated.View style={[styles.metricCard, restTileAnimatedStyle]}>
               <View style={styles.metricLabelRow}>
                 <Moon size={16} strokeWidth={1.5} color={palette.accentDew} />
                 <Text style={styles.metricLabel}>Rest</Text>
@@ -90,9 +177,9 @@ export function MorningRevealModal({
                 </Text>
                 <Text style={styles.rewardUnit}>Dew</Text>
               </View>
-            </View>
+            </Animated.View>
 
-            <View style={styles.metricCard}>
+            <Animated.View style={[styles.metricCard, stepsTileAnimatedStyle]}>
               <View style={styles.metricLabelRow}>
                 <Footprints size={16} strokeWidth={1.5} color={palette.accentSunlight} />
                 <Text style={styles.metricLabel}>Steps</Text>
@@ -107,13 +194,13 @@ export function MorningRevealModal({
                 </Text>
                 <Text style={styles.rewardUnit}>Sunlight</Text>
               </View>
-            </View>
+            </Animated.View>
           </View>
 
-          <View style={styles.keeperCard}>
+          <Animated.View style={[styles.keeperCard, keeperAnimatedStyle]}>
             <Text style={styles.keeperLabel}>Garden keeper</Text>
             <Text style={styles.keeperNote}>{reveal.keeperNote}</Text>
-          </View>
+          </Animated.View>
 
           <BotanicalButton
             label={ctaLabel}
@@ -123,7 +210,7 @@ export function MorningRevealModal({
             accessibilityLabel={ctaLabel}
             accessibilityHint="Return to the sunlit meadow"
           />
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
