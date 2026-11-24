@@ -63,42 +63,43 @@ export default function ShopScreen() {
         : undefined;
 
     return (
-      <Animated.View entering={entering} style={styles.itemCard}>
-        <View style={styles.spriteBox}>
-          <GardenSprite assetKey={item.assetKey} size={50} />
+      <Animated.View entering={entering} style={styles.seedPacketCard}>
+        <View style={styles.packetTopRow}>
+          <Text style={styles.categoryTag}>{item.category}</Text>
+          {isOwned ? (
+            <View style={styles.ownedTag}>
+              <Check size={12} strokeWidth={1.8} color={palette.accentMoss} />
+              <Text style={styles.ownedTagText}>Owned</Text>
+            </View>
+          ) : item.isPro ? (
+            <View style={styles.proTag}>
+              <Lock size={12} strokeWidth={1.6} color={palette.textMuted} />
+              <Text style={styles.proTagText}>Pro</Text>
+            </View>
+          ) : null}
+        </View>
+
+        <View style={styles.portraitFrame}>
+          <GardenSprite assetKey={item.assetKey} size={58} />
         </View>
 
         <View style={styles.itemInfo}>
-          <View style={styles.itemTitleRow}>
-            <Text style={styles.itemName} numberOfLines={1}>
-              {item.name}
-            </Text>
-            {isOwned ? (
-              <View style={styles.ownedTag}>
-                <Check size={12} strokeWidth={1.8} color={palette.accentMoss} />
-                <Text style={styles.ownedTagText}>Owned</Text>
-              </View>
-            ) : item.isPro ? (
-              <View style={styles.proTag}>
-                <Lock size={12} strokeWidth={1.6} color={palette.textMuted} />
-                <Text style={styles.proTagText}>Pro</Text>
-              </View>
-            ) : null}
-          </View>
-
+          <Text style={styles.itemName} numberOfLines={1}>
+            {item.name}
+          </Text>
           <Text style={styles.itemDescription} numberOfLines={2}>
             {item.description}
           </Text>
+        </View>
 
-          <View style={styles.costRow}>
-            <View style={styles.costItem}>
-              <Droplets size={13} strokeWidth={1.6} color={palette.accentDew} />
-              <Text style={styles.costValue}>{item.dewCost}</Text>
-            </View>
-            <View style={styles.costItem}>
-              <Sun size={13} strokeWidth={1.6} color={palette.accentSunlight} />
-              <Text style={styles.costValue}>{item.sunlightCost}</Text>
-            </View>
+        <View style={styles.costRow}>
+          <View style={styles.costBadge}>
+            <Droplets size={12} strokeWidth={1.6} color={palette.accentDew} />
+            <Text style={styles.costValue}>{item.dewCost}</Text>
+          </View>
+          <View style={styles.costBadge}>
+            <Sun size={12} strokeWidth={1.6} color={palette.accentSunlight} />
+            <Text style={styles.costValue}>{item.sunlightCost}</Text>
           </View>
         </View>
 
@@ -115,16 +116,17 @@ export default function ShopScreen() {
                 : `Not enough Dew or Sunlight for ${item.name}`
           }
           accessibilityState={{ disabled: !canPlace && !isProLocked }}
-          style={[
+          style={({ pressed }) => [
             styles.placeButton,
             !canPlace && !isProLocked && styles.placeButtonDisabled,
+            pressed && !reducedMotion && styles.placeButtonPressed,
           ]}
         >
           {isProLocked ? (
-            <Lock size={15} strokeWidth={1.6} color={palette.textMuted} />
+            <Lock size={14} strokeWidth={1.6} color={palette.textMuted} />
           ) : (
             <Plus
-              size={16}
+              size={15}
               strokeWidth={1.8}
               color={canPlace ? palette.accentMossText : palette.textMuted}
             />
@@ -135,7 +137,7 @@ export default function ShopScreen() {
               !canPlace && styles.placeButtonTextDisabled,
             ]}
           >
-            {isOwned ? 'Place' : isProLocked ? 'Pro' : 'Place'}
+            {isOwned ? 'Plant' : isProLocked ? 'Pro' : 'Plant'}
           </Text>
         </Pressable>
       </Animated.View>
@@ -196,8 +198,10 @@ export default function ShopScreen() {
 
       <FlatList
         data={filteredItems}
+        numColumns={2}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
+        columnWrapperStyle={styles.columnRow}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />
@@ -282,38 +286,47 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
     gap: spacing.md,
   },
-  itemCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  columnRow: {
     gap: spacing.md,
+  },
+  seedPacketCard: {
+    flex: 1,
     backgroundColor: palette.surfaceElevated,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: palette.border,
     padding: spacing.md,
+    gap: spacing.sm,
   },
-  spriteBox: {
-    width: 60,
-    height: 60,
+  packetTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 18,
+  },
+  categoryTag: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 11,
+    color: palette.textMuted,
+    textTransform: 'capitalize',
+  },
+  portraitFrame: {
+    height: 84,
     borderRadius: radii.md,
     backgroundColor: palette.surface,
+    borderWidth: 1,
+    borderColor: palette.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
   itemInfo: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  itemTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
+    gap: 2,
+    minHeight: 54,
   },
   itemName: {
-    fontFamily: fonts.bodySemiBold,
+    fontFamily: fonts.displaySemiBold,
     fontSize: 15,
     color: palette.textPrimary,
-    flexShrink: 1,
   },
   ownedTag: {
     flexDirection: 'row',
@@ -322,7 +335,7 @@ const styles = StyleSheet.create({
   },
   ownedTagText: {
     fontFamily: fonts.bodyMedium,
-    fontSize: 12,
+    fontSize: 11,
     color: palette.accentMoss,
   },
   proTag: {
@@ -332,35 +345,37 @@ const styles = StyleSheet.create({
   },
   proTagText: {
     fontFamily: fonts.bodyMedium,
-    fontSize: 12,
+    fontSize: 11,
     color: palette.textMuted,
   },
   itemDescription: {
     fontFamily: fonts.body,
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 12,
+    lineHeight: 16,
     color: palette.textSecondary,
   },
   costRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
-    marginTop: 2,
+    gap: spacing.xs,
   },
-  costItem: {
+  costBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    backgroundColor: palette.surface,
+    borderRadius: radii.full,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
   },
   costValue: {
     fontFamily: fonts.bodySemiBold,
-    fontSize: 13,
+    fontSize: 12,
     color: palette.textPrimary,
     fontVariant: ['tabular-nums'],
   },
   placeButton: {
     minHeight: 44,
-    minWidth: 74,
     paddingHorizontal: spacing.md,
     borderRadius: radii.md,
     backgroundColor: palette.accentMoss,
@@ -368,6 +383,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
+  },
+  placeButtonPressed: {
+    transform: [{ scale: 0.97 }],
   },
   placeButtonDisabled: {
     backgroundColor: palette.surface,

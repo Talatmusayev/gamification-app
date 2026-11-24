@@ -30,7 +30,10 @@
       "expo-sharing",
       "expo-font",
       "expo-splash-screen",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-build-properties",
+      "@kingstinct/react-native-healthkit",
+      "react-native-health-connect"
     ]
   }
 }

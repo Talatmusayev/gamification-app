@@ -11,7 +11,7 @@ describe('useSanctuaryStore', () => {
     useSanctuaryStore.getState().resetAllData();
   });
 
-  it('completes onboarding by placing starter seedling at center (3, 3) with zero starter currency', () => {
+  it('completes onboarding with Starter Welcome Pouch (60 Dew / 60 Sunlight) and 3-item Starter Nook', () => {
     useSanctuaryStore.getState().completeOnboarding({
       sleepGoalMin: 480,
       stepGoal: 8000,
@@ -24,15 +24,19 @@ describe('useSanctuaryStore', () => {
     expect(state.profile.sleepGoalMin).toBe(480);
     expect(state.profile.stepGoal).toBe(8000);
     expect(state.profile.trackingMode).toBe('phone_only');
-    expect(state.profile.dewBalance).toBe(0);
-    expect(state.profile.sunlightBalance).toBe(0);
-    expect(state.ownedItemIds).toContain('lavender');
-    expect(state.placements).toHaveLength(1);
-    expect(state.placements[0]).toMatchObject({
-      itemId: 'lavender',
-      x: 3,
-      y: 3,
-    });
+    expect(state.profile.dewBalance).toBe(60);
+    expect(state.profile.sunlightBalance).toBe(60);
+    expect(state.ownedItemIds).toEqual(
+      expect.arrayContaining(['lavender', 'stepping_stone', 'meadow_daisy']),
+    );
+    expect(state.placements).toHaveLength(3);
+    expect(state.placements).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ itemId: 'lavender', x: 3, y: 3 }),
+        expect.objectContaining({ itemId: 'stepping_stone', x: 4, y: 3 }),
+        expect.objectContaining({ itemId: 'meadow_daisy', x: 2, y: 4 }),
+      ]),
+    );
   });
 
   it('triggers Morning Reveal once per dateKey and ignores duplicate same-day calls', () => {
@@ -55,8 +59,8 @@ describe('useSanctuaryStore', () => {
     expect(first.sunlightAwarded).toBeGreaterThan(0);
 
     const afterFirst = useSanctuaryStore.getState();
-    expect(afterFirst.profile.dewBalance).toBe(first.dewAwarded);
-    expect(afterFirst.profile.sunlightBalance).toBe(first.sunlightAwarded);
+    expect(afterFirst.profile.dewBalance).toBe(60 + first.dewAwarded);
+    expect(afterFirst.profile.sunlightBalance).toBe(60 + first.sunlightAwarded);
     expect(afterFirst.dailyLogs['2026-11-24']).toBeDefined();
     expect(afterFirst.pendingReveal).toEqual(first);
 
@@ -71,8 +75,8 @@ describe('useSanctuaryStore', () => {
     expect(second.sunlightAwarded).toBe(0);
 
     const afterSecond = useSanctuaryStore.getState();
-    expect(afterSecond.profile.dewBalance).toBe(first.dewAwarded);
-    expect(afterSecond.profile.sunlightBalance).toBe(first.sunlightAwarded);
+    expect(afterSecond.profile.dewBalance).toBe(60 + first.dewAwarded);
+    expect(afterSecond.profile.sunlightBalance).toBe(60 + first.sunlightAwarded);
   });
 
   it('places a catalog item, deducts currency, appends placement, and rejects invalid placements', () => {
@@ -83,8 +87,12 @@ describe('useSanctuaryStore', () => {
       trackingMode: 'phone_only',
     });
 
-    // Insufficient funds before earning Dew/Sunlight
-    const tooPoor = useSanctuaryStore.getState().placeCatalogItem('mossy_clover', 2, 2);
+    // Spend starter pouch on wooden_bench (35 dew, 45 sunlight -> 25 dew, 15 sunlight remaining)
+    const boughtWithPouch = useSanctuaryStore.getState().placeCatalogItem('wooden_bench', 1, 2);
+    expect(boughtWithPouch.ok).toBe(true);
+
+    // Insufficient funds for garden_robin (40 dew, 45 sunlight)
+    const tooPoor = useSanctuaryStore.getState().placeCatalogItem('garden_robin', 2, 2);
     expect(tooPoor).toEqual({ ok: false, reason: 'INSUFFICIENT_FUNDS' });
 
     // Earn Dew & Sunlight via Morning Reveal (480m sleep + 8000 steps)
@@ -99,10 +107,10 @@ describe('useSanctuaryStore', () => {
     expect(placed.ok).toBe(true);
 
     const state = useSanctuaryStore.getState();
-    expect(state.profile.dewBalance).toBe(reveal.dewAwarded - 20);
-    expect(state.profile.sunlightBalance).toBe(reveal.sunlightAwarded - 15);
+    expect(state.profile.dewBalance).toBe(25 + reveal.dewAwarded - 20);
+    expect(state.profile.sunlightBalance).toBe(15 + reveal.sunlightAwarded - 15);
     expect(state.ownedItemIds).toContain('mossy_clover');
-    expect(state.placements).toHaveLength(2);
+    expect(state.placements).toHaveLength(5);
     expect(state.placements.some((p) => p.itemId === 'mossy_clover' && p.x === 2 && p.y === 2)).toBe(true);
 
     // Occupied tile rejected
@@ -154,7 +162,11 @@ describe('useSanctuaryStore', () => {
     const shortResult = useSanctuaryStore.getState().finishLantern('2026-11-24T07:00:00.000Z', 0);
     expect(shortResult).toBeNull();
     expect(useSanctuaryStore.getState().activeLantern).toBeNull();
-    expect(useSanctuaryStore.getState().profile.dewBalance).toBe(0);
+    expect(useSanctuaryStore.getState().profile.dewBalance).toBe(60);
+
+    // Award bedtime dew when lighting the lantern
+    useSanctuaryStore.getState().awardBedtimeDew();
+    expect(useSanctuaryStore.getState().profile.dewBalance).toBe(70);
 
     // Valid overnight session (8 hours) -> triggers Morning Reveal
     useSanctuaryStore.getState().startLantern('2026-11-23T23:00:00.000Z');
@@ -164,7 +176,7 @@ describe('useSanctuaryStore', () => {
     expect(validResult?.log.sleepMin).toBe(480);
     expect(validResult?.log.steps).toBe(4000);
     expect(useSanctuaryStore.getState().activeLantern).toBeNull();
-    expect(useSanctuaryStore.getState().profile.dewBalance).toBe(validResult?.dewAwarded);
+    expect(useSanctuaryStore.getState().profile.dewBalance).toBe(70 + (validResult?.dewAwarded ?? 0));
     expect(useSanctuaryStore.getState().pendingReveal).toEqual(validResult);
   });
 

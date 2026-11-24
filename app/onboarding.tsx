@@ -106,7 +106,7 @@ export default function OnboardingScreen() {
       trackingMode,
     });
     trackEvent('onboarding_completed', { tracking_mode: trackingMode });
-    router.replace('/paywall?source=onboarding');
+    router.replace('/(tabs)/sanctuary');
   };
 
   const adjustSleep = (delta: number) => {
