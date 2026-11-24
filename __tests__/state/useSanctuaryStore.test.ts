@@ -213,4 +213,33 @@ describe('useSanctuaryStore', () => {
     expect(resetState.activeLantern).toBeNull();
     expect(resetState.pendingReveal).toBeNull();
   });
+
+  it('waters a placed plant through stages 1 -> 2 -> 3 and deducts 15 Dew each time', () => {
+    useSanctuaryStore.getState().completeOnboarding({
+      sleepGoalMin: 480,
+      stepGoal: 8000,
+      starterItemId: 'lavender',
+      trackingMode: 'phone_only',
+    });
+
+    const lavender = useSanctuaryStore
+      .getState()
+      .placements.find((p) => p.itemId === 'lavender');
+    expect(lavender).toBeDefined();
+    if (!lavender) return;
+
+    const first = useSanctuaryStore
+      .getState()
+      .waterPlacedItem(lavender.id, '2026-11-24T09:00:00.000Z');
+    expect(first).toMatchObject({ ok: true, newStage: 2, nextDew: 45 });
+
+    const second = useSanctuaryStore
+      .getState()
+      .waterPlacedItem(lavender.id, '2026-11-24T10:00:00.000Z');
+    expect(second).toMatchObject({ ok: true, newStage: 3, nextDew: 30 });
+
+    const third = useSanctuaryStore.getState().waterPlacedItem(lavender.id);
+    expect(third).toEqual({ ok: false, reason: 'ALREADY_FULL_BLOOM' });
+    expect(useSanctuaryStore.getState().profile.dewBalance).toBe(30);
+  });
 });

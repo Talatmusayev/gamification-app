@@ -1,20 +1,42 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Moon, Move, Share2, Sparkles, Sun, Users, X } from 'lucide-react-native';
-import { useEffect, useMemo, useState } from 'react';
+import {
+  Droplets,
+  Moon,
+  Move,
+  Share2,
+  Sparkles,
+  Sun,
+  Users,
+  X,
+} from 'lucide-react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useReducedMotion } from 'react-native-reanimated';
+import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GoodnightLanternModal } from '@/components/GoodnightLanternModal';
 import { IsometricCanvas } from '@/components/IsometricCanvas';
 import { MorningRevealModal } from '@/components/MorningRevealModal';
 import { SanctuaryHud } from '@/components/SanctuaryHud';
 import { ShareProgressCard } from '@/components/ShareProgressCard';
+import { GardenSprite } from '@/components/ui/GardenSprite';
 import { getCatalogItemById, SUNLIT_MEADOW_CATALOG } from '@/domain/catalog';
 import { calculateHarmonyScore } from '@/domain/fog';
+import {
+  WATER_DEW_COST,
+  getGrowthLabel,
+  getGrowthStage,
+} from '@/domain/growth';
 import type { GardenPlacement } from '@/domain/types';
 import { trackEvent } from '@/services/analyticsService';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
-import { fonts, nightPalette, palette, radii, spacing } from '@/theme/tokens';
+import {
+  fonts,
+  motion,
+  nightPalette,
+  palette,
+  radii,
+  spacing,
+} from '@/theme/tokens';
 import {
   hapticLight,
   hapticMedium,
@@ -71,6 +93,7 @@ export default function SanctuaryScreen() {
   const reducedMotion = useReducedMotion();
   const placeCatalogItem = useSanctuaryStore((s) => s.placeCatalogItem);
   const movePlacedItem = useSanctuaryStore((s) => s.movePlacedItem);
+  const waterPlacedItem = useSanctuaryStore((s) => s.waterPlacedItem);
   const startLantern = useSanctuaryStore((s) => s.startLantern);
   const awardBedtimeDew = useSanctuaryStore((s) => s.awardBedtimeDew);
   const finishLantern = useSanctuaryStore((s) => s.finishLantern);
@@ -80,6 +103,9 @@ export default function SanctuaryScreen() {
 
   const [placingItemId, setPlacingItemId] = useState<string | null>(null);
   const [movingPlacementId, setMovingPlacementId] = useState<string | null>(null);
+  const [selectedPlacementId, setSelectedPlacementId] = useState<string | null>(null);
+  const [recentlyWateredId, setRecentlyWateredId] = useState<string | null>(null);
+  const wateredTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [lanternModalOpen, setLanternModalOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
@@ -91,9 +117,18 @@ export default function SanctuaryScreen() {
     if (typeof placeItemId === 'string' && getCatalogItemById(placeItemId)) {
       setPlacingItemId(placeItemId);
       setMovingPlacementId(null);
+      setSelectedPlacementId(null);
       setFeedbackMessage(null);
     }
   }, [placeItemId]);
+
+  useEffect(() => {
+    return () => {
+      if (wateredTimerRef.current) {
+        clearTimeout(wateredTimerRef.current);
+      }
+    };
+  }, []);
 
   const harmony = useMemo(
     () => calculateHarmonyScore(Object.values(dailyLogs)),
@@ -111,9 +146,17 @@ export default function SanctuaryScreen() {
     ? getCatalogItemById(movingPlacement.itemId) ?? null
     : null;
 
+  const selectedPlacement = selectedPlacementId
+    ? placements.find((p) => p.id === selectedPlacementId) ?? null
+    : null;
+  const selectedItem = selectedPlacement
+    ? getCatalogItemById(selectedPlacement.itemId) ?? null
+    : null;
+
   const clearSelection = () => {
     setPlacingItemId(null);
     setMovingPlacementId(null);
+    setSelectedPlacementId(null);
     setFeedbackMessage(null);
     if (placeItemId) {
       router.setParams({ placeItemId: undefined });
@@ -154,6 +197,11 @@ export default function SanctuaryScreen() {
         hapticWarning();
         setFeedbackMessage('That patch is occupied. Tap an open meadow tile.');
       }
+      return;
+    }
+
+    if (selectedPlacementId) {
+      setSelectedPlacementId(null);
     }
   };
 
@@ -163,9 +211,50 @@ export default function SanctuaryScreen() {
       setMovingPlacementId(null);
       return;
     }
+    if (movingPlacementId) {
+      hapticWarning();
+      setFeedbackMessage('That patch is occupied. Tap an open meadow tile.');
+      return;
+    }
     hapticLight();
     setPlacingItemId(null);
-    setMovingPlacementId(placement.id);
+    setSelectedPlacementId((current) =>
+      current === placement.id ? null : placement.id,
+    );
+  };
+
+  const handleWaterSelected = () => {
+    if (!selectedPlacement || !selectedItem) {
+      return;
+    }
+    const result = waterPlacedItem(selectedPlacement.id);
+    if (!result.ok) {
+      hapticWarning();
+      return;
+    }
+
+    hapticSuccess();
+    setRecentlyWateredId(selectedPlacement.id);
+    if (wateredTimerRef.current) {
+      clearTimeout(wateredTimerRef.current);
+    }
+    wateredTimerRef.current = setTimeout(() => {
+      setRecentlyWateredId(null);
+    }, 520);
+
+    trackEvent('garden_plant_watered', {
+      item_slug: selectedItem.id,
+      new_stage: result.newStage,
+    });
+  };
+
+  const handleStartMoveSelected = () => {
+    if (!selectedPlacement) {
+      return;
+    }
+    hapticLight();
+    setMovingPlacementId(selectedPlacement.id);
+    setSelectedPlacementId(null);
   };
 
   const nextUnlockWhisper = useMemo(() => {
@@ -269,6 +358,14 @@ export default function SanctuaryScreen() {
     ? ownedItemIds.includes(placingItem.id)
     : false;
 
+  const selectedStage =
+    selectedPlacement && selectedItem
+      ? getGrowthStage(selectedPlacement, selectedItem)
+      : 1;
+  const selectedIsPlant = selectedItem?.category === 'plant';
+  const canAffordWater = profile.dewBalance >= WATER_DEW_COST;
+  const showWaterButton = selectedIsPlant && selectedStage < 3;
+
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <SanctuaryHud
@@ -284,6 +381,8 @@ export default function SanctuaryScreen() {
           fogLevel={profile.fogLevel}
           placingItemId={placingItemId}
           movingPlacementId={movingPlacementId}
+          selectedPlacementId={selectedPlacementId}
+          recentlyWateredId={recentlyWateredId}
           isSleeping={Boolean(activeLantern)}
           onTilePress={handleTilePress}
           onPlacementPress={handlePlacementPress}
@@ -359,7 +458,105 @@ export default function SanctuaryScreen() {
         ) : null}
       </View>
 
-      {nextUnlockWhisper && !placingItem && !movingItem ? (
+      {selectedPlacement && selectedItem && !placingItem && !movingItem ? (
+        <Animated.View
+          entering={reducedMotion ? undefined : FadeInDown.duration(motion.enterMs)}
+          style={styles.careBarWrap}
+        >
+          <View style={styles.careBar}>
+            <View style={styles.careIdentity}>
+              <View style={styles.careSpriteWrap}>
+                <GardenSprite assetKey={selectedItem.assetKey} size={36} />
+              </View>
+              <View style={styles.careCopy}>
+                <Text style={styles.careTitle} numberOfLines={1}>
+                  {selectedItem.name}
+                </Text>
+                {selectedIsPlant ? (
+                  <View style={styles.careStagePill}>
+                    <View style={styles.careStageDots}>
+                      {([1, 2, 3] as const).map((dotStage) => (
+                        <View
+                          key={dotStage}
+                          style={[
+                            styles.careStageDot,
+                            dotStage <= selectedStage && styles.careStageDotFilled,
+                          ]}
+                        />
+                      ))}
+                    </View>
+                    <Text style={styles.careStageText}>
+                      {`${getGrowthLabel(selectedStage)} · ${selectedStage}/3`}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={styles.careCategoryText}>
+                    {selectedItem.category === 'critter'
+                      ? 'Meadow companion'
+                      : 'Meadow decor'}
+                  </Text>
+                )}
+              </View>
+            </View>
+
+            <View style={styles.careActions}>
+              {showWaterButton ? (
+                <Pressable
+                  onPress={handleWaterSelected}
+                  disabled={!canAffordWater}
+                  hitSlop={4}
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: !canAffordWater }}
+                  accessibilityLabel={
+                    canAffordWater
+                      ? `Water ${selectedItem.name} for ${WATER_DEW_COST} Dew`
+                      : `Need ${WATER_DEW_COST} Dew to water ${selectedItem.name}`
+                  }
+                  style={[
+                    styles.careWaterButton,
+                    !canAffordWater && styles.careWaterButtonDisabled,
+                  ]}
+                >
+                  <Droplets
+                    size={15}
+                    strokeWidth={1.6}
+                    color={canAffordWater ? '#FFFFFF' : palette.textMuted}
+                  />
+                  <Text
+                    style={[
+                      styles.careWaterLabel,
+                      !canAffordWater && styles.careWaterLabelDisabled,
+                    ]}
+                  >
+                    {canAffordWater ? `Water · ${WATER_DEW_COST}` : `Need ${WATER_DEW_COST} Dew`}
+                  </Text>
+                </Pressable>
+              ) : null}
+
+              <Pressable
+                onPress={handleStartMoveSelected}
+                hitSlop={4}
+                accessibilityRole="button"
+                accessibilityLabel={`Move ${selectedItem.name}`}
+                style={styles.careMoveButton}
+              >
+                <Move size={15} strokeWidth={1.6} color={palette.textPrimary} />
+                <Text style={styles.careMoveLabel}>Move</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => setSelectedPlacementId(null)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Close plant care"
+                style={styles.careCloseButton}
+              >
+                <X size={16} strokeWidth={1.6} color={palette.textSecondary} />
+              </Pressable>
+            </View>
+          </View>
+        </Animated.View>
+      ) : nextUnlockWhisper && !placingItem && !movingItem ? (
         <View style={styles.whisperBar}>
           <Pressable
             onPress={() => {
@@ -666,8 +863,132 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.sm,
+  },
+  careBarWrap: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xs,
+  },
+  careBar: {
+    backgroundColor: palette.surfaceElevated,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: palette.border,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  careIdentity: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    minWidth: 0,
+  },
+  careSpriteWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: radii.md,
+    backgroundColor: palette.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  careCopy: {
+    flex: 1,
+    gap: 2,
+    minWidth: 0,
+  },
+  careTitle: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 14,
+    color: palette.textPrimary,
+  },
+  careStagePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  careStageDots: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  careStageDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: palette.border,
+  },
+  careStageDotFilled: {
+    backgroundColor: palette.accentMoss,
+  },
+  careStageText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12,
+    color: palette.textSecondary,
+    fontVariant: ['tabular-nums'],
+  },
+  careCategoryText: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: palette.textMuted,
+  },
+  careActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  careWaterButton: {
+    minHeight: 44,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.md,
+    backgroundColor: palette.accentDew,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+  },
+  careWaterButtonDisabled: {
+    backgroundColor: palette.surface,
+    borderWidth: 1,
+    borderColor: palette.border,
+  },
+  careWaterLabel: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 13,
+    color: '#FFFFFF',
+    fontVariant: ['tabular-nums'],
+  },
+  careWaterLabelDisabled: {
+    color: palette.textMuted,
+  },
+  careMoveButton: {
+    minHeight: 44,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.md,
+    backgroundColor: palette.surface,
+    borderWidth: 1,
+    borderColor: palette.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  careMoveLabel: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13,
+    color: palette.textPrimary,
+  },
+  careCloseButton: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radii.full,
   },
   actionButton: {
     minHeight: 48,

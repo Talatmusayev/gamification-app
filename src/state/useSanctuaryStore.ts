@@ -1,9 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { getCatalogItemById, SUNLIT_MEADOW_CATALOG } from '../domain/catalog';
+import {
+  CATALOG_BY_ID,
+  getCatalogItemById,
+  SUNLIT_MEADOW_CATALOG,
+} from '../domain/catalog';
 import { processMorningReveal } from '../domain/fog';
 import { movePlacement, validateAndPlaceItem } from '../domain/grid';
+import { waterPlacement } from '../domain/growth';
 import { completeLanternSession, startLanternSession } from '../domain/lantern';
 import {
   buildWidgetSnapshot,
@@ -62,6 +67,10 @@ export interface SanctuaryActions {
     toX: number,
     toY: number,
   ) => ReturnType<typeof movePlacement>;
+  waterPlacedItem: (
+    placementId: string,
+    nowIso?: string,
+  ) => ReturnType<typeof waterPlacement>;
   startLantern: (nowIso?: string) => void;
   awardBedtimeDew: (amount?: number) => void;
   finishLantern: (nowIso?: string, steps?: number) => MorningRevealResult | null;
@@ -265,6 +274,30 @@ export const useSanctuaryStore = create<SanctuaryStore>()(
         if (result.ok) {
           set({
             placements: result.nextPlacements,
+          });
+          syncWidgetSnapshot(get());
+        }
+
+        return result;
+      },
+
+      waterPlacedItem: (placementId, nowIso) => {
+        const state = get();
+        const result = waterPlacement({
+          placementId,
+          placements: state.placements,
+          dewBalance: state.profile.dewBalance,
+          catalogById: CATALOG_BY_ID,
+          nowIso,
+        });
+
+        if (result.ok) {
+          set({
+            placements: result.nextPlacements,
+            profile: {
+              ...state.profile,
+              dewBalance: result.nextDew,
+            },
           });
           syncWidgetSnapshot(get());
         }

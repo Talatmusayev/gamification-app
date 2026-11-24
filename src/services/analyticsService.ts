@@ -7,6 +7,7 @@ export type AnalyticsEventName =
   | 'subscription_purchased'
   | 'morning_reveal_completed'
   | 'garden_item_placed'
+  | 'garden_plant_watered'
   | 'widget_installed'
   | 'progress_card_shared';
 

@@ -37,12 +37,16 @@ export interface CatalogItem {
   description: string;
 }
 
+export type GrowthStage = 1 | 2 | 3;
+
 export interface GardenPlacement {
   id: string;
   itemId: string;
   x: number;
   y: number;
   placedAt: string;
+  growthStage?: GrowthStage;
+  lastWateredAt?: string;
 }
 
 export interface LanternSession {
