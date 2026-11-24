@@ -1,32 +1,42 @@
-import { StyleSheet, Text, View } from 'react-native';
-import { palette, spacing } from '@/theme/tokens';
+import { Redirect } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { useSanctuaryStore } from '@/state/useSanctuaryStore';
+import { palette } from '@/theme/tokens';
 
 export default function IndexScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Dew &amp; Bloom</Text>
-      <Text style={styles.subtitle}>Your restorative sanctuary is waking up.</Text>
-    </View>
+  const onboardingCompleted = useSanctuaryStore(
+    (s) => s.profile.onboardingCompleted,
   );
+  const [hydrated, setHydrated] = useState<boolean>(() =>
+    useSanctuaryStore.persist.hasHydrated(),
+  );
+
+  useEffect(() => {
+    if (useSanctuaryStore.persist.hasHydrated()) {
+      setHydrated(true);
+      return;
+    }
+    const unsubscribe = useSanctuaryStore.persist.onFinishHydration(() => {
+      setHydrated(true);
+    });
+    return unsubscribe;
+  }, []);
+
+  if (!hydrated) {
+    return <View style={styles.loadingSurface} />;
+  }
+
+  if (!onboardingCompleted) {
+    return <Redirect href="/onboarding" />;
+  }
+
+  return <Redirect href="/(tabs)/sanctuary" />;
 }
 
 const styles = StyleSheet.create({
-  container: {
+  loadingSurface: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: palette.bg,
-    padding: spacing.xl,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '600',
-    color: palette.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: palette.textSecondary,
-    textAlign: 'center',
   },
 });

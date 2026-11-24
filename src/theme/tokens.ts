@@ -5,7 +5,7 @@ export const palette = {
   border: 'rgba(30, 36, 30, 0.08)',
   textPrimary: '#1E241E',
   textSecondary: '#545E54',
-  textMuted: '#788278',
+  textMuted: '#5E685E',
   accentMoss: '#365E44',
   accentMossText: '#FFFFFF',
   accentDew: '#376675',
