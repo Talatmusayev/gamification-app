@@ -59,6 +59,7 @@ export interface SanctuaryActions {
   finishLantern: (nowIso?: string, steps?: number) => MorningRevealResult | null;
   dismissPendingReveal: () => void;
   setPendingReveal: (reveal: MorningRevealResult | null) => void;
+  updateGoals: (sleepGoalMin: number, stepGoal: number) => void;
   resetAllData: () => void;
 }
 
@@ -250,6 +251,18 @@ export const useSanctuaryStore = create<SanctuaryStore>()(
 
       setPendingReveal: (reveal) => {
         set({ pendingReveal: reveal });
+      },
+
+      updateGoals: (sleepGoalMin, stepGoal) => {
+        const clampedSleep = Math.min(720, Math.max(300, Math.round(sleepGoalMin)));
+        const clampedSteps = Math.min(30000, Math.max(1000, Math.round(stepGoal)));
+        set((state) => ({
+          profile: {
+            ...state.profile,
+            sleepGoalMin: clampedSleep,
+            stepGoal: clampedSteps,
+          },
+        }));
       },
 
       resetAllData: () => {

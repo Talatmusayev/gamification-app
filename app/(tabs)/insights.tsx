@@ -1,6 +1,7 @@
-import { Footprints, Leaf, Moon, Sparkles } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { Footprints, Leaf, Moon, Settings, Sparkles } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatSleepDuration } from '@/components/MorningRevealModal';
 import { BotanicalButton } from '@/components/ui/BotanicalButton';
@@ -57,6 +58,7 @@ function formatCompactSteps(steps: number): string {
 }
 
 export default function InsightsScreen() {
+  const router = useRouter();
   const profile = useSanctuaryStore((s) => s.profile);
   const dailyLogs = useSanctuaryStore((s) => s.dailyLogs);
   const triggerMorningReveal = useSanctuaryStore((s) => s.triggerMorningReveal);
@@ -140,7 +142,18 @@ export default function InsightsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Insights</Text>
+          <View style={styles.headerRow}>
+            <Text style={styles.title}>Insights</Text>
+            <Pressable
+              onPress={() => router.push('/settings')}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Open settings"
+              style={styles.settingsButton}
+            >
+              <Settings size={20} strokeWidth={1.5} color={palette.textPrimary} />
+            </Pressable>
+          </View>
           <Text style={styles.subtitle}>
             Your rolling seven-day rest and movement rhythm.
           </Text>
@@ -309,6 +322,19 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: spacing.xs,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  settingsButton: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: palette.surface,
   },
   title: {
     fontFamily: fonts.displaySemiBold,
