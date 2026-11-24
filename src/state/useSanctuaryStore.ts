@@ -67,6 +67,7 @@ export interface SanctuaryActions {
     toX: number,
     toY: number,
   ) => ReturnType<typeof movePlacement>;
+  removePlacedItem: (placementId: string) => boolean;
   waterPlacedItem: (
     placementId: string,
     nowIso?: string,
@@ -279,6 +280,17 @@ export const useSanctuaryStore = create<SanctuaryStore>()(
         }
 
         return result;
+      },
+
+      removePlacedItem: (placementId) => {
+        const state = get();
+        const nextPlacements = state.placements.filter((p) => p.id !== placementId);
+        if (nextPlacements.length === state.placements.length) {
+          return false;
+        }
+        set({ placements: nextPlacements });
+        syncWidgetSnapshot(get());
+        return true;
       },
 
       waterPlacedItem: (placementId, nowIso) => {

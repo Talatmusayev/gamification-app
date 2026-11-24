@@ -64,23 +64,19 @@ export default function ShopScreen() {
 
     return (
       <Animated.View entering={entering} style={styles.seedPacketCard}>
-        <View style={styles.packetTopRow}>
-          <Text style={styles.categoryTag}>{item.category}</Text>
+        <View style={styles.portraitFrame}>
           {isOwned ? (
-            <View style={styles.ownedTag}>
-              <Check size={12} strokeWidth={1.8} color={palette.accentMoss} />
+            <View style={[styles.statusBadge, styles.ownedTag]}>
+              <Check size={11} strokeWidth={2} color={palette.accentMoss} />
               <Text style={styles.ownedTagText}>Owned</Text>
             </View>
           ) : item.isPro ? (
-            <View style={styles.proTag}>
-              <Lock size={12} strokeWidth={1.6} color={palette.textMuted} />
+            <View style={[styles.statusBadge, styles.proTag]}>
+              <Lock size={11} strokeWidth={1.7} color={palette.textMuted} />
               <Text style={styles.proTagText}>Pro</Text>
             </View>
           ) : null}
-        </View>
-
-        <View style={styles.portraitFrame}>
-          <GardenSprite assetKey={item.assetKey} size={58} />
+          <GardenSprite assetKey={item.assetKey} size={66} />
         </View>
 
         <View style={styles.itemInfo}>
@@ -93,11 +89,11 @@ export default function ShopScreen() {
         </View>
 
         <View style={styles.costRow}>
-          <View style={styles.costBadge}>
+          <View style={styles.costItem}>
             <Droplets size={12} strokeWidth={1.6} color={palette.accentDew} />
             <Text style={styles.costValue}>{item.dewCost}</Text>
           </View>
-          <View style={styles.costBadge}>
+          <View style={styles.costItem}>
             <Sun size={12} strokeWidth={1.6} color={palette.accentSunlight} />
             <Text style={styles.costValue}>{item.sunlightCost}</Text>
           </View>
@@ -238,7 +234,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.xs,
     backgroundColor: palette.surfaceElevated,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: palette.border,
     borderRadius: radii.full,
     paddingHorizontal: spacing.md,
@@ -262,7 +258,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     borderRadius: radii.full,
     backgroundColor: palette.surface,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: palette.border,
     alignItems: 'center',
     justifyContent: 'center',
@@ -293,31 +289,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: palette.surfaceElevated,
     borderRadius: radii.lg,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: palette.border,
     padding: spacing.md,
     gap: spacing.sm,
   },
-  packetTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    minHeight: 18,
-  },
-  categoryTag: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 11,
-    color: palette.textMuted,
-    textTransform: 'capitalize',
-  },
   portraitFrame: {
-    height: 84,
+    height: 100,
     borderRadius: radii.md,
-    backgroundColor: palette.surface,
-    borderWidth: 1,
-    borderColor: palette.border,
+    backgroundColor: '#F4F1EA',
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+  },
+  statusBadge: {
+    position: 'absolute',
+    top: spacing.xs + 2,
+    right: spacing.xs + 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: radii.full,
+    backgroundColor: 'rgba(250, 248, 244, 0.88)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.border,
   },
   itemInfo: {
     gap: 2,
@@ -328,21 +325,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: palette.textPrimary,
   },
-  ownedTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
+  ownedTag: {},
   ownedTagText: {
     fontFamily: fonts.bodyMedium,
     fontSize: 11,
     color: palette.accentMoss,
   },
-  proTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
+  proTag: {},
   proTagText: {
     fontFamily: fonts.bodyMedium,
     fontSize: 11,
@@ -357,16 +346,13 @@ const styles = StyleSheet.create({
   costRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: spacing.md,
+    paddingVertical: 2,
   },
-  costBadge: {
+  costItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: palette.surface,
-    borderRadius: radii.full,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
   },
   costValue: {
     fontFamily: fonts.bodySemiBold,
@@ -389,7 +375,7 @@ const styles = StyleSheet.create({
   },
   placeButtonDisabled: {
     backgroundColor: palette.surface,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: palette.border,
   },
   placeButtonText: {

@@ -9,6 +9,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { liquidGlassSurface } from '@/theme/glass';
 import { fonts, palette, radii, spacing, springs } from '@/theme/tokens';
 
 export interface SanctuaryHudProps {
@@ -102,13 +103,11 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   pill: {
+    ...liquidGlassSurface,
     minHeight: 36,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    backgroundColor: palette.surfaceElevated,
-    borderWidth: 1,
-    borderColor: palette.border,
     borderRadius: radii.full,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,

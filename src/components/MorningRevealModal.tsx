@@ -7,11 +7,14 @@ import Animated, {
   useReducedMotion,
   useSharedValue,
   withDelay,
+  withSequence,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import { BotanicalButton } from '@/components/ui/BotanicalButton';
 import type { MorningRevealResult } from '@/domain/types';
+import { liquidGlassSurface } from '@/theme/glass';
 import { fonts, motion, palette, radii, spacing, springs } from '@/theme/tokens';
 
 export interface MorningRevealModalProps {
@@ -44,11 +47,13 @@ export function MorningRevealModal({
   const stepsTileOpacity = useSharedValue(reducedMotion ? 1 : 0);
   const stepsTileTranslateY = useSharedValue(reducedMotion ? 0 : 12);
   const keeperOpacity = useSharedValue(reducedMotion ? 1 : 0);
+  const ctaScale = useSharedValue(1);
 
   useEffect(() => {
     if (!visible || !reveal) {
       return;
     }
+    ctaScale.value = 1;
     if (reducedMotion) {
       sheetOpacity.value = 1;
       sheetTranslateY.value = 0;
@@ -89,6 +94,7 @@ export function MorningRevealModal({
     stepsTileOpacity,
     stepsTileTranslateY,
     keeperOpacity,
+    ctaScale,
   ]);
 
   const sheetAnimatedStyle = useAnimatedStyle(() => ({
@@ -110,13 +116,22 @@ export function MorningRevealModal({
     opacity: keeperOpacity.value,
   }));
 
+  const ctaAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: ctaScale.value }],
+  }));
+
   if (!visible || !reveal) {
     return null;
   }
 
   const handleClearMist = () => {
     if (!reducedMotion) {
-      sheetOpacity.value = withTiming(0, { duration: 140 });
+      ctaScale.value = withSequence(
+        withSpring(1.035, springs.pop),
+        withSpring(0.985, springs.tactile),
+      );
+      sheetOpacity.value = withTiming(0, { duration: 150 });
+      sheetTranslateY.value = withTiming(-6, { duration: 150 });
     }
     if (!reveal.alreadyRevealed && Platform.OS !== 'web') {
       void Haptics.notificationAsync(
@@ -148,12 +163,33 @@ export function MorningRevealModal({
     >
       <View style={styles.backdrop}>
         <Animated.View
-          style={[styles.sheet, sheetAnimatedStyle]}
+          style={[liquidGlassSurface, styles.sheet, sheetAnimatedStyle]}
           accessibilityViewIsModal
         >
           <View style={styles.headerRow}>
+            <View style={styles.sunGlowWrap}>
+              <Svg
+                width={64}
+                height={64}
+                viewBox="0 0 64 64"
+                style={styles.sunGlowSvg}
+                pointerEvents="none"
+              >
+                <Defs>
+                  <RadialGradient id="morningGoldenGlow" cx="50%" cy="50%" r="50%">
+                    <Stop offset="0%" stopColor="#F5C469" stopOpacity={0.44} />
+                    <Stop offset="55%" stopColor="#E9B454" stopOpacity={0.16} />
+                    <Stop offset="100%" stopColor="#E9B454" stopOpacity={0} />
+                  </RadialGradient>
+                </Defs>
+                <Circle cx="32" cy="32" r="32" fill="url(#morningGoldenGlow)" />
+              </Svg>
+              <View style={styles.sunBadge}>
+                <Sun size={20} strokeWidth={1.6} color={palette.accentSunlight} />
+              </View>
+            </View>
             <View style={styles.eyebrowPill}>
-              <Sparkles size={14} strokeWidth={1.6} color={palette.accentMoss} />
+              <Sparkles size={13} strokeWidth={1.6} color={palette.accentMoss} />
               <Text style={styles.eyebrowText}>{reveal.log.dateKey}</Text>
             </View>
           </View>
@@ -202,14 +238,16 @@ export function MorningRevealModal({
             <Text style={styles.keeperNote}>{reveal.keeperNote}</Text>
           </Animated.View>
 
-          <BotanicalButton
-            label={ctaLabel}
-            onPress={handleClearMist}
-            fullWidth
-            haptic={false}
-            accessibilityLabel={ctaLabel}
-            accessibilityHint="Return to the sunlit meadow"
-          />
+          <Animated.View style={ctaAnimatedStyle}>
+            <BotanicalButton
+              label={ctaLabel}
+              onPress={handleClearMist}
+              fullWidth
+              haptic={false}
+              accessibilityLabel={ctaLabel}
+              accessibilityHint="Return to the sunlit meadow"
+            />
+          </Animated.View>
         </Animated.View>
       </View>
     </Modal>
@@ -219,27 +257,51 @@ export function MorningRevealModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(20, 25, 22, 0.45)',
+    backgroundColor: 'rgba(28, 35, 30, 0.34)',
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
   },
   sheet: {
-    backgroundColor: palette.bg,
     borderRadius: radii.xl,
     padding: spacing.xl,
-    borderWidth: 1,
-    borderColor: palette.border,
     gap: spacing.lg,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sunGlowWrap: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: -spacing.xs,
+  },
+  sunGlowSvg: {
+    position: 'absolute',
+    width: 64,
+    height: 64,
+    top: -8,
+    left: -8,
+  },
+  sunBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.full,
+    backgroundColor: 'rgba(255, 249, 236, 0.85)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(214, 165, 78, 0.32)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   eyebrowPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-    backgroundColor: palette.surface,
+    backgroundColor: 'rgba(242, 239, 233, 0.76)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.border,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: radii.full,
@@ -270,10 +332,10 @@ const styles = StyleSheet.create({
   },
   metricCard: {
     flex: 1,
-    backgroundColor: palette.surfaceElevated,
+    backgroundColor: 'rgba(255, 255, 255, 0.68)',
     borderRadius: radii.lg,
     padding: spacing.lg,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: palette.border,
     gap: spacing.sm,
   },
@@ -319,8 +381,10 @@ const styles = StyleSheet.create({
     color: palette.textMuted,
   },
   keeperCard: {
-    backgroundColor: palette.surface,
+    backgroundColor: 'rgba(242, 239, 233, 0.68)',
     borderRadius: radii.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.border,
     padding: spacing.lg,
     gap: spacing.xs,
   },

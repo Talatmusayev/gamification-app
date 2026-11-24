@@ -30,6 +30,7 @@ import { getCatalogItemById } from '@/domain/catalog';
 import { GRID_SIZE, gridToScreen } from '@/domain/grid';
 import { getGrowthScale, getGrowthStage } from '@/domain/growth';
 import type { FogLevel, GardenPlacement } from '@/domain/types';
+import { liquidGlassSurface } from '@/theme/glass';
 import { motion, palette, radii, spacing, springs } from '@/theme/tokens';
 import { hapticLight } from '@/utils/haptics';
 
@@ -1090,19 +1091,12 @@ const styles = StyleSheet.create({
     transform: [{ translateY: -5 }],
   },
   cameraControls: {
+    ...liquidGlassSurface,
     position: 'absolute',
     right: spacing.lg,
-    bottom: spacing.md,
-    backgroundColor: 'rgba(255, 255, 255, 0.90)',
+    bottom: 136,
     borderRadius: radii.full,
-    borderWidth: 1,
-    borderColor: palette.border,
     overflow: 'hidden',
-    shadowColor: '#1E241E',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 3,
   },
   cameraBtn: {
     width: 40,

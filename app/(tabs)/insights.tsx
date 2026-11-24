@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Footprints, Leaf, Moon, Settings, Sparkles } from 'lucide-react-native';
+import { Footprints, Moon, Settings } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, {
@@ -186,7 +186,7 @@ export default function InsightsScreen() {
       >
         <View style={styles.header}>
           <View style={styles.headerRow}>
-            <Text style={styles.title}>Insights</Text>
+            <Text style={styles.title}>Meadow Almanac</Text>
             <Pressable
               onPress={() => router.push('/settings')}
               hitSlop={8}
@@ -202,13 +202,11 @@ export default function InsightsScreen() {
           </Text>
         </View>
 
+        <View style={styles.sectionDivider} />
+
         {allLogs.length === 0 ? (
-          <View style={styles.firstBloomCard}>
-            <View style={styles.iconLabelRow}>
-              <Sparkles size={16} strokeWidth={1.6} color={palette.accentMoss} />
-              <Text style={styles.sectionLabel}>First Bloom · 3-Day Journey</Text>
-            </View>
-            <Text style={styles.firstBloomTitle}>
+          <View style={styles.sectionBlock}>
+            <Text style={styles.almanacHeading}>
               Three restful mornings awaken your meadow
             </Text>
             <Text style={styles.firstBloomBody}>
@@ -250,16 +248,10 @@ export default function InsightsScreen() {
           </View>
         ) : (
           <>
-            <View style={styles.harmonyCard}>
-              <View style={styles.harmonyTop}>
-                <View style={styles.iconLabelRow}>
-                  <Leaf size={16} strokeWidth={1.6} color={palette.accentMoss} />
-                  <Text style={styles.sectionLabel}>Rolling harmony</Text>
-                </View>
-                <Text style={styles.harmonyHeadline}>
-                  {harmony.restfulDays} of {harmony.windowDays} restful days
-                </Text>
-              </View>
+            <View style={styles.sectionBlock}>
+              <Text style={styles.harmonyHeadline}>
+                {harmony.restfulDays} of {harmony.windowDays} restful days
+              </Text>
 
               <View style={styles.avgRow}>
                 <View style={styles.avgCell}>
@@ -280,12 +272,14 @@ export default function InsightsScreen() {
               </View>
             </View>
 
+            <View style={styles.sectionDivider} />
+
             {/* 7-day Sleep Chart */}
-            <View style={styles.chartCard}>
+            <View style={styles.sectionBlock}>
               <View style={styles.chartHeader}>
                 <View style={styles.iconLabelRow}>
                   <Moon size={16} strokeWidth={1.5} color={palette.accentDew} />
-                  <Text style={styles.chartTitle}>Rest</Text>
+                  <Text style={styles.almanacHeading}>Rest</Text>
                 </View>
                 <Text style={styles.goalText}>
                   Goal {formatSleepDuration(profile.sleepGoalMin)}
@@ -322,12 +316,14 @@ export default function InsightsScreen() {
               </View>
             </View>
 
+            <View style={styles.sectionDivider} />
+
             {/* 7-day Steps Chart */}
-            <View style={styles.chartCard}>
+            <View style={styles.sectionBlock}>
               <View style={styles.chartHeader}>
                 <View style={styles.iconLabelRow}>
                   <Footprints size={16} strokeWidth={1.5} color={palette.accentSunlight} />
-                  <Text style={styles.chartTitle}>Steps</Text>
+                  <Text style={styles.almanacHeading}>Steps</Text>
                 </View>
                 <Text style={styles.goalText}>
                   Goal {profile.stepGoal.toLocaleString()}
@@ -364,12 +360,11 @@ export default function InsightsScreen() {
           </>
         )}
 
-        {/* Garden Keeper Insight Card */}
-        <View style={styles.keeperCard}>
-          <View style={styles.iconLabelRow}>
-            <Sparkles size={15} strokeWidth={1.6} color={palette.accentMoss} />
-            <Text style={styles.keeperHeading}>Garden keeper note</Text>
-          </View>
+        <View style={styles.sectionDivider} />
+
+        {/* Garden Keeper Almanac Note */}
+        <View style={styles.keeperSection}>
+          <Text style={styles.almanacHeading}>Garden keeper</Text>
           <Text style={styles.keeperBody}>
             {latestLog?.aiInsight ??
               'Your meadow is quiet and ready. Complete your first morning reveal to hear from the garden keeper.'}
@@ -377,19 +372,21 @@ export default function InsightsScreen() {
         </View>
 
         {__DEV__ ? (
-          <View style={styles.devCard}>
-            <Text style={styles.devLabel}>Developer preview</Text>
-            <BotanicalButton
-              label="Simulate morning reveal"
-              variant="secondary"
-              onPress={handleSimulateReveal}
-              fullWidth
-              accessibilityLabel="Simulate morning reveal"
-            />
-            {simFeedback ? (
-              <Text style={styles.devFeedback}>{simFeedback}</Text>
-            ) : null}
-          </View>
+          <>
+            <View style={styles.sectionDivider} />
+            <View style={styles.devSection}>
+              <BotanicalButton
+                label="Simulate morning reveal"
+                variant="secondary"
+                onPress={handleSimulateReveal}
+                fullWidth
+                accessibilityLabel="Simulate morning reveal"
+              />
+              {simFeedback ? (
+                <Text style={styles.devFeedback}>{simFeedback}</Text>
+              ) : null}
+            </View>
+          </>
         ) : null}
       </ScrollView>
     </SafeAreaView>
@@ -404,8 +401,8 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    paddingBottom: spacing.xxl,
-    gap: spacing.lg,
+    paddingBottom: spacing.xxl + spacing.lg,
+    gap: spacing.xl,
   },
   header: {
     gap: spacing.xs,
@@ -422,10 +419,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: palette.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.border,
   },
   title: {
     fontFamily: fonts.displaySemiBold,
-    fontSize: 26,
+    fontSize: 28,
     letterSpacing: -0.3,
     color: palette.textPrimary,
   },
@@ -435,40 +434,37 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: palette.textSecondary,
   },
-  harmonyCard: {
-    backgroundColor: palette.surfaceElevated,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: palette.border,
-    padding: spacing.lg,
-    gap: spacing.md,
+  sectionDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: palette.border,
   },
-  harmonyTop: {
-    gap: spacing.xs,
+  sectionBlock: {
+    gap: spacing.md,
   },
   iconLabelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: spacing.sm,
   },
-  sectionLabel: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 13,
-    color: palette.textSecondary,
+  almanacHeading: {
+    fontFamily: fonts.displaySemiBold,
+    fontSize: 19,
+    lineHeight: 25,
+    letterSpacing: -0.2,
+    color: palette.textPrimary,
   },
   harmonyHeadline: {
     fontFamily: fonts.displaySemiBold,
-    fontSize: 22,
+    fontSize: 24,
+    lineHeight: 30,
     color: palette.textPrimary,
     fontVariant: ['tabular-nums'],
-    letterSpacing: -0.2,
+    letterSpacing: -0.25,
   },
   avgRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: spacing.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: palette.border,
+    paddingTop: spacing.sm,
   },
   avgCell: {
     flex: 1,
@@ -481,33 +477,20 @@ const styles = StyleSheet.create({
   },
   avgValue: {
     fontFamily: fonts.bodySemiBold,
-    fontSize: 16,
+    fontSize: 18,
     color: palette.textPrimary,
     fontVariant: ['tabular-nums'],
   },
   avgDivider: {
     width: StyleSheet.hairlineWidth,
-    height: 28,
+    height: 30,
     backgroundColor: palette.border,
-    marginHorizontal: spacing.md,
-  },
-  chartCard: {
-    backgroundColor: palette.surfaceElevated,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: palette.border,
-    padding: spacing.lg,
-    gap: spacing.md,
+    marginHorizontal: spacing.lg,
   },
   chartHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'baseline',
     justifyContent: 'space-between',
-  },
-  chartTitle: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: 15,
-    color: palette.textPrimary,
   },
   goalText: {
     fontFamily: fonts.body,
@@ -551,35 +534,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: palette.textSecondary,
   },
-  keeperCard: {
-    backgroundColor: palette.surface,
-    borderRadius: radii.lg,
-    padding: spacing.lg,
+  keeperSection: {
     gap: spacing.sm,
-  },
-  keeperHeading: {
-    fontFamily: fonts.bodySemiBold,
-    fontSize: 13,
-    color: palette.accentMoss,
+    borderLeftWidth: 2,
+    borderLeftColor: palette.accentMoss,
+    paddingLeft: spacing.md,
   },
   keeperBody: {
     fontFamily: fonts.body,
     fontSize: 15,
-    lineHeight: 22,
-    color: palette.textPrimary,
+    lineHeight: 23,
+    color: palette.textSecondary,
   },
-  devCard: {
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: palette.border,
-    padding: spacing.lg,
+  devSection: {
     gap: spacing.sm,
-  },
-  devLabel: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 12,
-    color: palette.textMuted,
   },
   devFeedback: {
     fontFamily: fonts.body,
@@ -587,24 +555,10 @@ const styles = StyleSheet.create({
     color: palette.textSecondary,
     fontVariant: ['tabular-nums'],
   },
-  firstBloomCard: {
-    backgroundColor: palette.surfaceElevated,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: palette.border,
-    padding: spacing.xl,
-    gap: spacing.md,
-  },
-  firstBloomTitle: {
-    fontFamily: fonts.displaySemiBold,
-    fontSize: 20,
-    lineHeight: 26,
-    color: palette.textPrimary,
-  },
   firstBloomBody: {
     fontFamily: fonts.body,
     fontSize: 14,
-    lineHeight: 21,
+    lineHeight: 22,
     color: palette.textSecondary,
   },
   milestoneRow: {
@@ -622,7 +576,7 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: radii.full,
     backgroundColor: palette.surface,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: palette.border,
     alignItems: 'center',
     justifyContent: 'center',
@@ -640,7 +594,7 @@ const styles = StyleSheet.create({
   },
   milestoneLine: {
     flex: 1,
-    height: 1,
+    height: StyleSheet.hairlineWidth,
     backgroundColor: palette.border,
     marginBottom: spacing.lg,
     marginHorizontal: spacing.xs,

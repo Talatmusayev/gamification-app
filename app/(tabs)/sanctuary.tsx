@@ -1,5 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
+  Archive,
   Droplets,
   Moon,
   Move,
@@ -12,7 +13,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GoodnightLanternModal } from '@/components/GoodnightLanternModal';
 import { IsometricCanvas } from '@/components/IsometricCanvas';
 import { MorningRevealModal } from '@/components/MorningRevealModal';
@@ -29,6 +30,7 @@ import {
 import type { GardenPlacement } from '@/domain/types';
 import { trackEvent } from '@/services/analyticsService';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
+import { liquidGlassSubtle, liquidGlassSurface } from '@/theme/glass';
 import {
   fonts,
   motion,
@@ -81,6 +83,7 @@ function getTodayDateKey(): string {
 
 export default function SanctuaryScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { placeItemId } = useLocalSearchParams<{ placeItemId?: string }>();
 
   const profile = useSanctuaryStore((s) => s.profile);
@@ -93,6 +96,7 @@ export default function SanctuaryScreen() {
   const reducedMotion = useReducedMotion();
   const placeCatalogItem = useSanctuaryStore((s) => s.placeCatalogItem);
   const movePlacedItem = useSanctuaryStore((s) => s.movePlacedItem);
+  const removePlacedItem = useSanctuaryStore((s) => s.removePlacedItem);
   const waterPlacedItem = useSanctuaryStore((s) => s.waterPlacedItem);
   const startLantern = useSanctuaryStore((s) => s.startLantern);
   const awardBedtimeDew = useSanctuaryStore((s) => s.awardBedtimeDew);
@@ -257,6 +261,19 @@ export default function SanctuaryScreen() {
     setSelectedPlacementId(null);
   };
 
+  const handleStashSelected = () => {
+    if (!selectedPlacement || !selectedItem) {
+      return;
+    }
+    const removed = removePlacedItem(selectedPlacement.id);
+    if (!removed) {
+      return;
+    }
+    hapticMedium();
+    setSelectedPlacementId(null);
+    setFeedbackMessage(`Stashed ${selectedItem.name} back in your collection.`);
+  };
+
   const nextUnlockWhisper = useMemo(() => {
     const candidates = SUNLIT_MEADOW_CATALOG.filter(
       (item) => (!item.isPro || profile.isPro) && !ownedItemIds.includes(item.id),
@@ -367,15 +384,8 @@ export default function SanctuaryScreen() {
   const showWaterButton = selectedIsPlant && selectedStage < 3;
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <SanctuaryHud
-        dewBalance={profile.dewBalance}
-        sunlightBalance={profile.sunlightBalance}
-        restfulDays={harmony.restfulDays}
-        windowDays={harmony.windowDays}
-      />
-
-      <View style={styles.canvasWrap}>
+    <View style={styles.screen}>
+      <View style={StyleSheet.absoluteFill}>
         <IsometricCanvas
           placements={placements}
           fogLevel={profile.fogLevel}
@@ -387,21 +397,37 @@ export default function SanctuaryScreen() {
           onTilePress={handleTilePress}
           onPlacementPress={handlePlacementPress}
         />
+      </View>
 
-        <Pressable
-          onPress={() => {
-            hapticSelection();
-            router.push('/duo');
-          }}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel="Open Duo shared meadow"
-          style={styles.duoPill}
-        >
-          <Users size={16} strokeWidth={1.6} color={palette.accentMoss} />
-          <Text style={styles.duoPillText}>Duo</Text>
-        </Pressable>
+      <View
+        pointerEvents="box-none"
+        style={[styles.topChrome, { paddingTop: insets.top + spacing.xs }]}
+      >
+        <SanctuaryHud
+          dewBalance={profile.dewBalance}
+          sunlightBalance={profile.sunlightBalance}
+          restfulDays={harmony.restfulDays}
+          windowDays={harmony.windowDays}
+        />
 
+        <View pointerEvents="box-none" style={styles.topSubRow}>
+          <Pressable
+            onPress={() => {
+              hapticSelection();
+              router.push('/duo');
+            }}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Open Duo shared meadow"
+            style={styles.duoPill}
+          >
+            <Users size={16} strokeWidth={1.6} color={palette.accentMoss} />
+            <Text style={styles.duoPillText}>Duo</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      <View pointerEvents="box-none" style={styles.bottomChrome}>
         {placingItem ? (
           <View style={styles.modeBanner}>
             <View style={styles.modeBannerCopy}>
@@ -456,171 +482,182 @@ export default function SanctuaryScreen() {
             </Pressable>
           </View>
         ) : null}
-      </View>
 
-      {selectedPlacement && selectedItem && !placingItem && !movingItem ? (
-        <Animated.View
-          entering={reducedMotion ? undefined : FadeInDown.duration(motion.enterMs)}
-          style={styles.careBarWrap}
-        >
-          <View style={styles.careBar}>
-            <View style={styles.careTopRow}>
-              <View style={styles.careIdentity}>
-                <View style={styles.careSpriteWrap}>
-                  <GardenSprite
-                    assetKey={selectedItem.assetKey}
-                    size={40}
-                    growthStage={selectedStage}
-                  />
-                </View>
-                <View style={styles.careCopy}>
-                  <Text style={styles.careTitle} numberOfLines={1}>
-                    {selectedItem.name}
-                  </Text>
-                  {selectedIsPlant ? (
-                    <View style={styles.careStagePill}>
-                      <View style={styles.careStageDots}>
-                        {([1, 2, 3] as const).map((dotStage) => (
-                          <View
-                            key={dotStage}
-                            style={[
-                              styles.careStageDot,
-                              dotStage <= selectedStage && styles.careStageDotFilled,
-                            ]}
-                          />
-                        ))}
-                      </View>
-                      <Text style={styles.careStageText}>
-                        {`${getGrowthLabel(selectedStage)} · ${selectedStage}/3`}
-                      </Text>
-                    </View>
-                  ) : (
-                    <Text style={styles.careCategoryText}>
-                      {selectedItem.category === 'critter'
-                        ? 'Meadow companion'
-                        : 'Meadow decor'}
+        {selectedPlacement && selectedItem && !placingItem && !movingItem ? (
+          <Animated.View
+            entering={reducedMotion ? undefined : FadeInDown.duration(motion.enterMs)}
+            style={styles.careBarWrap}
+          >
+            <View style={styles.careBar}>
+              <View style={styles.careTopRow}>
+                <View style={styles.careIdentity}>
+                  <View style={styles.careSpriteWrap}>
+                    <GardenSprite
+                      assetKey={selectedItem.assetKey}
+                      size={40}
+                      growthStage={selectedStage}
+                    />
+                  </View>
+                  <View style={styles.careCopy}>
+                    <Text style={styles.careTitle} numberOfLines={1}>
+                      {selectedItem.name}
                     </Text>
-                  )}
+                    {selectedIsPlant ? (
+                      <View style={styles.careStagePill}>
+                        <View style={styles.careStageDots}>
+                          {([1, 2, 3] as const).map((dotStage) => (
+                            <View
+                              key={dotStage}
+                              style={[
+                                styles.careStageDot,
+                                dotStage <= selectedStage && styles.careStageDotFilled,
+                              ]}
+                            />
+                          ))}
+                        </View>
+                        <Text style={styles.careStageText}>
+                          {`${getGrowthLabel(selectedStage)} · ${selectedStage}/3`}
+                        </Text>
+                      </View>
+                    ) : (
+                      <Text style={styles.careCategoryText}>
+                        {selectedItem.category === 'critter'
+                          ? 'Meadow companion'
+                          : 'Meadow decor'}
+                      </Text>
+                    )}
+                  </View>
                 </View>
+
+                <Pressable
+                  onPress={() => setSelectedPlacementId(null)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Close plant care"
+                  style={styles.careCloseButton}
+                >
+                  <X size={16} strokeWidth={1.6} color={palette.textSecondary} />
+                </Pressable>
               </View>
 
-              <Pressable
-                onPress={() => setSelectedPlacementId(null)}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel="Close plant care"
-                style={styles.careCloseButton}
-              >
-                <X size={16} strokeWidth={1.6} color={palette.textSecondary} />
-              </Pressable>
-            </View>
-
-            <View style={styles.careActions}>
-              {showWaterButton ? (
-                <Pressable
-                  onPress={handleWaterSelected}
-                  disabled={!canAffordWater}
-                  hitSlop={4}
-                  accessibilityRole="button"
-                  accessibilityState={{ disabled: !canAffordWater }}
-                  accessibilityLabel={
-                    canAffordWater
-                      ? `Water ${selectedItem.name} for ${WATER_DEW_COST} Dew`
-                      : `Need ${WATER_DEW_COST} Dew to water ${selectedItem.name}`
-                  }
-                  style={[
-                    styles.careWaterButton,
-                    !canAffordWater && styles.careWaterButtonDisabled,
-                  ]}
-                >
-                  <Droplets
-                    size={15}
-                    strokeWidth={1.6}
-                    color={canAffordWater ? '#FFFFFF' : palette.textMuted}
-                  />
-                  <Text
+              <View style={styles.careActions}>
+                {showWaterButton ? (
+                  <Pressable
+                    onPress={handleWaterSelected}
+                    disabled={!canAffordWater}
+                    hitSlop={4}
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: !canAffordWater }}
+                    accessibilityLabel={
+                      canAffordWater
+                        ? `Water ${selectedItem.name} for ${WATER_DEW_COST} Dew`
+                        : `Need ${WATER_DEW_COST} Dew to water ${selectedItem.name}`
+                    }
                     style={[
-                      styles.careWaterLabel,
-                      !canAffordWater && styles.careWaterLabelDisabled,
+                      styles.careWaterButton,
+                      !canAffordWater && styles.careWaterButtonDisabled,
                     ]}
                   >
-                    {canAffordWater ? `Water · ${WATER_DEW_COST}` : `Need ${WATER_DEW_COST} Dew`}
-                  </Text>
-                </Pressable>
-              ) : null}
+                    <Droplets
+                      size={15}
+                      strokeWidth={1.6}
+                      color={canAffordWater ? '#FFFFFF' : palette.textMuted}
+                    />
+                    <Text
+                      style={[
+                        styles.careWaterLabel,
+                        !canAffordWater && styles.careWaterLabelDisabled,
+                      ]}
+                    >
+                      {canAffordWater ? `Water · ${WATER_DEW_COST}` : `Need ${WATER_DEW_COST} Dew`}
+                    </Text>
+                  </Pressable>
+                ) : null}
 
-              <Pressable
-                onPress={handleStartMoveSelected}
-                hitSlop={4}
-                accessibilityRole="button"
-                accessibilityLabel={`Move ${selectedItem.name}`}
-                style={styles.careMoveButton}
-              >
-                <Move size={15} strokeWidth={1.6} color={palette.textPrimary} />
-                <Text style={styles.careMoveLabel}>Move</Text>
-              </Pressable>
+                <Pressable
+                  onPress={handleStartMoveSelected}
+                  hitSlop={4}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Move ${selectedItem.name}`}
+                  style={styles.careMoveButton}
+                >
+                  <Move size={15} strokeWidth={1.6} color={palette.textPrimary} />
+                  <Text style={styles.careMoveLabel}>Move</Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={handleStashSelected}
+                  hitSlop={4}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Stash ${selectedItem.name} back into collection`}
+                  style={styles.careMoveButton}
+                >
+                  <Archive size={15} strokeWidth={1.6} color={palette.textSecondary} />
+                  <Text style={styles.careStashLabel}>Stash</Text>
+                </Pressable>
+              </View>
             </View>
+          </Animated.View>
+        ) : nextUnlockWhisper && !placingItem && !movingItem ? (
+          <View style={styles.whisperBar}>
+            <Pressable
+              onPress={() => {
+                hapticSelection();
+                router.push('/(tabs)/shop');
+              }}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel={`Next bloom: ${nextUnlockWhisper}`}
+              style={styles.whisperPill}
+            >
+              <Sparkles size={14} strokeWidth={1.6} color={palette.accentMoss} />
+              <Text style={styles.whisperLabel}>Next bloom</Text>
+              <Text style={styles.whisperValue} numberOfLines={1}>
+                {nextUnlockWhisper}
+              </Text>
+            </Pressable>
           </View>
-        </Animated.View>
-      ) : nextUnlockWhisper && !placingItem && !movingItem ? (
-        <View style={styles.whisperBar}>
+        ) : null}
+
+        <View style={styles.actionBar}>
           <Pressable
-            onPress={() => {
-              hapticSelection();
-              router.push('/(tabs)/shop');
-            }}
+            onPress={() => setLanternModalOpen(true)}
             hitSlop={6}
             accessibilityRole="button"
-            accessibilityLabel={`Next bloom: ${nextUnlockWhisper}`}
-            style={styles.whisperPill}
+            accessibilityLabel={
+              activeLantern ? 'Open active goodnight lantern' : 'Open goodnight lantern'
+            }
+            style={styles.actionButton}
           >
-            <Sparkles size={14} strokeWidth={1.6} color={palette.accentMoss} />
-            <Text style={styles.whisperLabel}>Next bloom</Text>
-            <Text style={styles.whisperValue} numberOfLines={1}>
-              {nextUnlockWhisper}
-            </Text>
+            <View style={styles.actionIconWrap}>
+              <Moon size={18} strokeWidth={1.5} color={palette.textPrimary} />
+              {activeLantern ? <View style={styles.lanternDot} /> : null}
+            </View>
+            <Text style={styles.actionLabel}>Lantern</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={handleRevealTrigger}
+            hitSlop={6}
+            accessibilityRole="button"
+            accessibilityLabel="Open morning reveal"
+            style={[styles.actionButton, styles.actionButtonPrimary]}
+          >
+            <Sun size={18} strokeWidth={1.6} color={palette.accentMossText} />
+            <Text style={styles.actionLabelPrimary}>Morning reveal</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => setShareModalOpen(true)}
+            hitSlop={6}
+            accessibilityRole="button"
+            accessibilityLabel="Share sanctuary card"
+            style={styles.actionButton}
+          >
+            <Share2 size={18} strokeWidth={1.5} color={palette.textPrimary} />
+            <Text style={styles.actionLabel}>Share</Text>
           </Pressable>
         </View>
-      ) : null}
-
-      <View style={styles.actionBar}>
-        <Pressable
-          onPress={() => setLanternModalOpen(true)}
-          hitSlop={6}
-          accessibilityRole="button"
-          accessibilityLabel={
-            activeLantern ? 'Open active goodnight lantern' : 'Open goodnight lantern'
-          }
-          style={styles.actionButton}
-        >
-          <View style={styles.actionIconWrap}>
-            <Moon size={18} strokeWidth={1.5} color={palette.textPrimary} />
-            {activeLantern ? <View style={styles.lanternDot} /> : null}
-          </View>
-          <Text style={styles.actionLabel}>Lantern</Text>
-        </Pressable>
-
-        <Pressable
-          onPress={handleRevealTrigger}
-          hitSlop={6}
-          accessibilityRole="button"
-          accessibilityLabel="Open morning reveal"
-          style={[styles.actionButton, styles.actionButtonPrimary]}
-        >
-          <Sun size={18} strokeWidth={1.6} color={palette.accentMossText} />
-          <Text style={styles.actionLabelPrimary}>Morning reveal</Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => setShareModalOpen(true)}
-          hitSlop={6}
-          accessibilityRole="button"
-          accessibilityLabel="Share sanctuary card"
-          style={styles.actionButton}
-        >
-          <Share2 size={18} strokeWidth={1.5} color={palette.textPrimary} />
-          <Text style={styles.actionLabel}>Share</Text>
-        </Pressable>
       </View>
 
       <MorningRevealModal
@@ -764,7 +801,7 @@ export default function SanctuaryScreen() {
         windowDays={harmony.windowDays}
         onClose={() => setShareModalOpen(false)}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -773,21 +810,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: palette.bg,
   },
-  canvasWrap: {
-    flex: 1,
-    position: 'relative',
+  topChrome: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+  topSubRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.xs,
+  },
+  bottomChrome: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    gap: spacing.xs,
+    paddingBottom: spacing.sm,
   },
   duoPill: {
-    position: 'absolute',
-    top: spacing.sm,
-    right: spacing.lg,
+    ...liquidGlassSurface,
     minHeight: 44,
     minWidth: 44,
     paddingHorizontal: spacing.md,
     borderRadius: radii.full,
-    backgroundColor: palette.surfaceElevated,
-    borderWidth: 1,
-    borderColor: palette.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -799,14 +847,9 @@ const styles = StyleSheet.create({
     color: palette.textPrimary,
   },
   modeBanner: {
-    position: 'absolute',
-    bottom: spacing.md,
-    left: spacing.lg,
-    right: spacing.lg,
-    backgroundColor: palette.surfaceElevated,
+    ...liquidGlassSurface,
+    marginHorizontal: spacing.lg,
     borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: palette.border,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     flexDirection: 'row',
@@ -843,14 +886,9 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
   },
   feedbackToast: {
-    position: 'absolute',
-    bottom: spacing.md,
-    left: spacing.lg,
-    right: spacing.lg,
-    backgroundColor: palette.surface,
+    ...liquidGlassSubtle,
+    marginHorizontal: spacing.lg,
     borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: palette.border,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     flexDirection: 'row',
@@ -862,25 +900,20 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.body,
     fontSize: 13,
-    color: palette.textSecondary,
+    color: palette.textPrimary,
   },
   actionBar: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xs,
-    paddingBottom: spacing.sm,
   },
   careBarWrap: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xs,
   },
   careBar: {
-    backgroundColor: palette.surfaceElevated,
+    ...liquidGlassSurface,
     borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: palette.border,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     gap: spacing.sm,
@@ -980,9 +1013,9 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingHorizontal: spacing.sm,
     borderRadius: radii.md,
-    backgroundColor: palette.surface,
+    backgroundColor: 'rgba(255, 255, 255, 0.54)',
     borderWidth: 1,
-    borderColor: palette.border,
+    borderColor: 'rgba(30, 36, 30, 0.09)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -993,6 +1026,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: palette.textPrimary,
   },
+  careStashLabel: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13,
+    color: palette.textSecondary,
+  },
   careCloseButton: {
     minWidth: 44,
     minHeight: 44,
@@ -1001,12 +1039,10 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
   },
   actionButton: {
+    ...liquidGlassSurface,
     minHeight: 48,
     paddingHorizontal: spacing.md,
     borderRadius: radii.md,
-    backgroundColor: palette.surfaceElevated,
-    borderWidth: 1,
-    borderColor: palette.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1041,16 +1077,13 @@ const styles = StyleSheet.create({
   },
   whisperBar: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xs,
   },
   whisperPill: {
+    ...liquidGlassSubtle,
     minHeight: 40,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: radii.full,
-    backgroundColor: palette.surface,
-    borderWidth: 1,
-    borderColor: palette.border,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,

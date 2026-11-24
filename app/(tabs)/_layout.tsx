@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { BarChart2, Sprout, Store } from 'lucide-react-native';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fonts, palette, spacing } from '@/theme/tokens';
 import { hapticSelection } from '@/utils/haptics';
@@ -19,13 +19,19 @@ export default function TabsLayout() {
         tabBarActiveTintColor: palette.accentMoss,
         tabBarInactiveTintColor: palette.textMuted,
         tabBarStyle: {
-          backgroundColor: palette.bg,
-          borderTopColor: palette.border,
+          backgroundColor: 'rgba(250, 248, 244, 0.88)',
+          borderTopColor: 'rgba(30, 36, 30, 0.08)',
           borderTopWidth: StyleSheet.hairlineWidth,
           height: 62 + bottomInset,
           paddingTop: spacing.xs,
           paddingBottom: bottomInset,
           elevation: 0,
+          ...(Platform.OS === 'web'
+            ? ({
+                backdropFilter: 'blur(16px) saturate(150%)',
+                WebkitBackdropFilter: 'blur(16px) saturate(150%)',
+              } as ViewStyle)
+            : {}),
         },
         tabBarLabelStyle: {
           fontFamily: fonts.bodyMedium,
