@@ -5,6 +5,10 @@ import { getCatalogItemById } from '../domain/catalog';
 import { processMorningReveal } from '../domain/fog';
 import { movePlacement, validateAndPlaceItem } from '../domain/grid';
 import { completeLanternSession, startLanternSession } from '../domain/lantern';
+import {
+  buildWidgetSnapshot,
+  persistWidgetSnapshot,
+} from '../services/widgetBridge';
 import type {
   DailyLog,
   GardenPlacement,
@@ -94,6 +98,18 @@ function toLocalDateKey(isoString: string): string {
   return `${year}-${month}-${day}`;
 }
 
+function syncWidgetSnapshot(
+  state: Pick<SanctuaryDataState, 'profile' | 'placements' | 'dailyLogs'>,
+): void {
+  void persistWidgetSnapshot(
+    buildWidgetSnapshot({
+      profile: state.profile,
+      placements: state.placements,
+      dailyLogs: state.dailyLogs,
+    }),
+  ).catch(() => {});
+}
+
 export const useSanctuaryStore = create<SanctuaryStore>()(
   persist(
     (set, get) => ({
@@ -139,6 +155,7 @@ export const useSanctuaryStore = create<SanctuaryStore>()(
           activeLantern: null,
           pendingReveal: null,
         });
+        syncWidgetSnapshot(get());
       },
 
       triggerMorningReveal: (input) => {
@@ -166,6 +183,7 @@ export const useSanctuaryStore = create<SanctuaryStore>()(
             },
             pendingReveal: result,
           });
+          syncWidgetSnapshot(get());
         }
 
         return result;
@@ -199,6 +217,7 @@ export const useSanctuaryStore = create<SanctuaryStore>()(
               sunlightBalance: result.nextSunlight,
             },
           });
+          syncWidgetSnapshot(get());
         }
 
         return result;
@@ -212,6 +231,7 @@ export const useSanctuaryStore = create<SanctuaryStore>()(
           set({
             placements: result.nextPlacements,
           });
+          syncWidgetSnapshot(get());
         }
 
         return result;

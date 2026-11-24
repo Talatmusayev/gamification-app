@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Check, Sparkles, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -26,6 +26,8 @@ const PRO_BENEFITS = [
 
 export default function PaywallScreen() {
   const router = useRouter();
+  const { source } = useLocalSearchParams<{ source?: string }>();
+  const isFromOnboarding = source === 'onboarding';
   const reducedMotion = useReducedMotion();
   const isPro = useSanctuaryStore((s) => s.profile.isPro);
 
@@ -48,14 +50,14 @@ export default function PaywallScreen() {
     });
 
     trackEvent('paywall_viewed', {
-      placement: 'onboarding',
+      placement: isFromOnboarding ? 'onboarding' : 'shop',
       offering_id: 'default',
     });
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [isFromOnboarding]);
 
   const selectedOffering =
     offerings.find((item) => item.id === selectedPlanId) ?? offerings[0];
@@ -77,6 +79,10 @@ export default function PaywallScreen() {
   })();
 
   const navigateToSanctuary = () => {
+    if (isFromOnboarding) {
+      router.replace('/(tabs)/sanctuary');
+      return;
+    }
     if (router.canGoBack()) {
       router.back();
     } else {

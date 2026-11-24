@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/BotanicalIllustration';
 import { SUNLIT_MEADOW_CATALOG } from '@/domain/catalog';
 import type { CatalogItem, TrackingMode } from '@/domain/types';
+import { trackEvent } from '@/services/analyticsService';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
 import { fonts, palette, radii, spacing } from '@/theme/tokens';
 
@@ -104,7 +105,8 @@ export default function OnboardingScreen() {
       starterItemId,
       trackingMode,
     });
-    router.replace('/(tabs)/sanctuary');
+    trackEvent('onboarding_completed', { tracking_mode: trackingMode });
+    router.replace('/paywall?source=onboarding');
   };
 
   const adjustSleep = (delta: number) => {

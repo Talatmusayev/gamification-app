@@ -10,6 +10,7 @@ import { GardenSprite } from '@/components/ui/GardenSprite';
 import { getCatalogItemById } from '@/domain/catalog';
 import { GRID_SIZE, gridToScreen } from '@/domain/grid';
 import type { GardenPlacement } from '@/domain/types';
+import { trackEvent } from '@/services/analyticsService';
 import { fonts, palette, radii, spacing } from '@/theme/tokens';
 
 export interface ShareProgressCardProps {
@@ -95,6 +96,7 @@ export function ShareProgressCard({
         mimeType: 'image/png',
         dialogTitle: 'Share sanctuary card',
       });
+      trackEvent('progress_card_shared', { days_tended: restfulDays });
     } catch {
       setStatusMessage(
         'Sharing is unavailable in this environment. You can screenshot this card instead.',
