@@ -1,6 +1,6 @@
 import { Droplets, Leaf, Sun } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
-import { palette, radii, spacing } from '@/theme/tokens';
+import { fonts, palette, radii, spacing } from '@/theme/tokens';
 
 export interface SanctuaryHudProps {
   dewBalance: number;
@@ -78,8 +78,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   currencyValue: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 14,
-    fontWeight: '600',
     color: palette.textPrimary,
     fontVariant: ['tabular-nums'],
   },
@@ -87,8 +87,8 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   harmonyText: {
+    fontFamily: fonts.bodyMedium,
     fontSize: 13,
-    fontWeight: '500',
     color: palette.textSecondary,
     fontVariant: ['tabular-nums'],
   },

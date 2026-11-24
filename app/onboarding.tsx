@@ -35,7 +35,7 @@ import {
 import { SUNLIT_MEADOW_CATALOG } from '@/domain/catalog';
 import type { CatalogItem, TrackingMode } from '@/domain/types';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
-import { palette, radii, spacing } from '@/theme/tokens';
+import { fonts, palette, radii, spacing } from '@/theme/tokens';
 
 const TOTAL_STEPS = 4;
 
@@ -671,8 +671,8 @@ const styles = StyleSheet.create({
   stepCounter: {
     width: 36,
     textAlign: 'right',
+    fontFamily: fonts.bodyMedium,
     fontSize: 13,
-    fontWeight: '500',
     color: palette.textMuted,
     fontVariant: ['tabular-nums'],
   },
@@ -708,18 +708,19 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   eyebrow: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 14,
-    fontWeight: '600',
     color: palette.accentMoss,
   },
   heading: {
+    fontFamily: fonts.displaySemiBold,
     fontSize: 28,
-    lineHeight: 34,
-    fontWeight: '600',
+    lineHeight: 35,
     color: palette.textPrimary,
-    letterSpacing: -0.4,
+    letterSpacing: -0.3,
   },
   body: {
+    fontFamily: fonts.body,
     fontSize: 15,
     lineHeight: 22,
     color: palette.textSecondary,
@@ -758,11 +759,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   resourceTitle: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 15,
-    fontWeight: '600',
     color: palette.textPrimary,
   },
   resourceCaption: {
+    fontFamily: fonts.body,
     fontSize: 13,
     lineHeight: 18,
     color: palette.textMuted,
@@ -789,11 +791,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   goalLabel: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: palette.textPrimary,
   },
   goalHint: {
+    fontFamily: fonts.body,
     fontSize: 13,
     color: palette.textMuted,
   },
@@ -819,8 +822,8 @@ const styles = StyleSheet.create({
     opacity: 0.35,
   },
   goalValue: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 22,
-    fontWeight: '600',
     color: palette.textPrimary,
     fontVariant: ['tabular-nums'],
     letterSpacing: -0.3,
@@ -848,11 +851,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   optionTitle: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: palette.textPrimary,
   },
   optionDescription: {
+    fontFamily: fonts.body,
     fontSize: 13,
     lineHeight: 19,
     color: palette.textSecondary,
@@ -892,8 +896,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
   },
   readyBadgeText: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 12,
-    fontWeight: '600',
     color: palette.accentMoss,
   },
   mutedBadge: {
@@ -903,8 +907,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
   },
   mutedBadgeText: {
+    fontFamily: fonts.bodyMedium,
     fontSize: 12,
-    fontWeight: '500',
     color: palette.textMuted,
   },
   spacer: {

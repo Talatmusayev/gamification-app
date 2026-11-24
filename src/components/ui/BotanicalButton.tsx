@@ -15,7 +15,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { motion, palette, radii, spacing } from '@/theme/tokens';
+import { fonts, motion, palette, radii, spacing } from '@/theme/tokens';
 
 export type BotanicalButtonVariant = 'primary' | 'secondary' | 'ghost';
 
@@ -150,8 +150,8 @@ const styles = StyleSheet.create({
     opacity: 0.45,
   },
   label: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 15,
-    fontWeight: '600',
     letterSpacing: -0.1,
   },
   labelPrimary: {

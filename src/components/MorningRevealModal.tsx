@@ -4,7 +4,7 @@ import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 import { BotanicalButton } from '@/components/ui/BotanicalButton';
 import type { MorningRevealResult } from '@/domain/types';
-import { palette, radii, spacing } from '@/theme/tokens';
+import { fonts, palette, radii, spacing } from '@/theme/tokens';
 
 export interface MorningRevealModalProps {
   visible: boolean;
@@ -158,19 +158,20 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
   },
   eyebrowText: {
+    fontFamily: fonts.bodyMedium,
     fontSize: 12,
-    fontWeight: '500',
     color: palette.textSecondary,
     fontVariant: ['tabular-nums'],
   },
   title: {
+    fontFamily: fonts.displaySemiBold,
     fontSize: 24,
-    fontWeight: '600',
-    letterSpacing: -0.4,
+    letterSpacing: -0.3,
     color: palette.textPrimary,
     marginTop: -spacing.sm,
   },
   subtitle: {
+    fontFamily: fonts.body,
     fontSize: 15,
     lineHeight: 22,
     color: palette.textSecondary,
@@ -195,13 +196,13 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   metricLabel: {
+    fontFamily: fonts.bodyMedium,
     fontSize: 13,
-    fontWeight: '500',
     color: palette.textSecondary,
   },
   metricValue: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 22,
-    fontWeight: '600',
     color: palette.textPrimary,
     fontVariant: ['tabular-nums'],
     letterSpacing: -0.3,
@@ -215,8 +216,8 @@ const styles = StyleSheet.create({
     borderTopColor: palette.border,
   },
   rewardText: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 14,
-    fontWeight: '600',
     fontVariant: ['tabular-nums'],
   },
   dewText: {
@@ -226,6 +227,7 @@ const styles = StyleSheet.create({
     color: palette.accentSunlight,
   },
   rewardUnit: {
+    fontFamily: fonts.body,
     fontSize: 13,
     color: palette.textMuted,
   },
@@ -236,12 +238,13 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   keeperLabel: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 12,
-    fontWeight: '600',
     color: palette.accentMoss,
     letterSpacing: 0.2,
   },
   keeperNote: {
+    fontFamily: fonts.body,
     fontSize: 15,
     lineHeight: 22,
     color: palette.textPrimary,

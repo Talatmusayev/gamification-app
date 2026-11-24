@@ -5,7 +5,7 @@ import { useReducedMotion } from 'react-native-reanimated';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { MIN_VALID_REST_MIN } from '@/domain/lantern';
 import type { LanternSession } from '@/domain/types';
-import { nightPalette, radii, spacing } from '@/theme/tokens';
+import { fonts, nightPalette, radii, spacing } from '@/theme/tokens';
 
 export interface GoodnightLanternModalProps {
   visible: boolean;
@@ -237,8 +237,8 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   statusLabel: {
+    fontFamily: fonts.bodyMedium,
     fontSize: 13,
-    fontWeight: '500',
     color: nightPalette.textSecondary,
   },
   closeButton: {
@@ -254,9 +254,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   title: {
+    fontFamily: fonts.displaySemiBold,
     fontSize: 24,
-    fontWeight: '600',
-    letterSpacing: -0.4,
+    letterSpacing: -0.3,
     color: nightPalette.textPrimary,
     textAlign: 'center',
   },
@@ -265,13 +265,14 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   elapsedValue: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 32,
-    fontWeight: '600',
     color: nightPalette.accentLantern,
     fontVariant: ['tabular-nums'],
     letterSpacing: -0.5,
   },
   body: {
+    fontFamily: fonts.body,
     fontSize: 15,
     lineHeight: 22,
     color: nightPalette.textSecondary,
@@ -292,8 +293,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
   },
   primaryLanternLabel: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 15,
-    fontWeight: '600',
     color: nightPalette.bg,
   },
   secondaryLanternButton: {
@@ -304,8 +305,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   secondaryLanternLabel: {
+    fontFamily: fonts.bodyMedium,
     fontSize: 14,
-    fontWeight: '500',
     color: nightPalette.textSecondary,
   },
 });

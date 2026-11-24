@@ -7,7 +7,7 @@ import { BotanicalButton } from '@/components/ui/BotanicalButton';
 import { calculateHarmonyScore } from '@/domain/fog';
 import type { DailyLog } from '@/domain/types';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
-import { palette, radii, spacing } from '@/theme/tokens';
+import { fonts, palette, radii, spacing } from '@/theme/tokens';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 const BAR_MAX_HEIGHT = 92;
@@ -311,12 +311,13 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   title: {
+    fontFamily: fonts.displaySemiBold,
     fontSize: 26,
-    fontWeight: '600',
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
     color: palette.textPrimary,
   },
   subtitle: {
+    fontFamily: fonts.body,
     fontSize: 15,
     lineHeight: 22,
     color: palette.textSecondary,
@@ -338,16 +339,16 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   sectionLabel: {
+    fontFamily: fonts.bodyMedium,
     fontSize: 13,
-    fontWeight: '500',
     color: palette.textSecondary,
   },
   harmonyHeadline: {
+    fontFamily: fonts.displaySemiBold,
     fontSize: 22,
-    fontWeight: '600',
     color: palette.textPrimary,
     fontVariant: ['tabular-nums'],
-    letterSpacing: -0.3,
+    letterSpacing: -0.2,
   },
   avgRow: {
     flexDirection: 'row',
@@ -361,12 +362,13 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   avgLabel: {
+    fontFamily: fonts.body,
     fontSize: 12,
     color: palette.textMuted,
   },
   avgValue: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: palette.textPrimary,
     fontVariant: ['tabular-nums'],
   },
@@ -390,11 +392,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   chartTitle: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 15,
-    fontWeight: '600',
     color: palette.textPrimary,
   },
   goalText: {
+    fontFamily: fonts.body,
     fontSize: 12,
     color: palette.textMuted,
     fontVariant: ['tabular-nums'],
@@ -412,6 +415,7 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   barTopValue: {
+    fontFamily: fonts.body,
     fontSize: 11,
     color: palette.textMuted,
     fontVariant: ['tabular-nums'],
@@ -430,8 +434,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
   },
   barDayLabel: {
+    fontFamily: fonts.bodyMedium,
     fontSize: 12,
-    fontWeight: '500',
     color: palette.textSecondary,
   },
   keeperCard: {
@@ -441,11 +445,12 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   keeperHeading: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 13,
-    fontWeight: '600',
     color: palette.accentMoss,
   },
   keeperBody: {
+    fontFamily: fonts.body,
     fontSize: 15,
     lineHeight: 22,
     color: palette.textPrimary,
@@ -459,11 +464,12 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   devLabel: {
+    fontFamily: fonts.bodyMedium,
     fontSize: 12,
-    fontWeight: '500',
     color: palette.textMuted,
   },
   devFeedback: {
+    fontFamily: fonts.body,
     fontSize: 13,
     color: palette.textSecondary,
     fontVariant: ['tabular-nums'],

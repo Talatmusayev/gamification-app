@@ -10,7 +10,7 @@ import { GardenSprite } from '@/components/ui/GardenSprite';
 import { getCatalogItemById } from '@/domain/catalog';
 import { GRID_SIZE, gridToScreen } from '@/domain/grid';
 import type { GardenPlacement } from '@/domain/types';
-import { palette, radii, spacing } from '@/theme/tokens';
+import { fonts, palette, radii, spacing } from '@/theme/tokens';
 
 export interface ShareProgressCardProps {
   visible: boolean;
@@ -260,8 +260,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   headerTitle: {
+    fontFamily: fonts.displaySemiBold,
     fontSize: 18,
-    fontWeight: '600',
     color: palette.textPrimary,
   },
   closeButton: {
@@ -290,13 +290,13 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   brandText: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 14,
-    fontWeight: '600',
     color: palette.textPrimary,
   },
   cardCaption: {
+    fontFamily: fonts.bodyMedium,
     fontSize: 12,
-    fontWeight: '500',
     color: palette.textMuted,
   },
   previewWrap: {
@@ -323,12 +323,13 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   statLabel: {
+    fontFamily: fonts.body,
     fontSize: 12,
     color: palette.textMuted,
   },
   statValue: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 14,
-    fontWeight: '600',
     color: palette.textPrimary,
     fontVariant: ['tabular-nums'],
   },
@@ -339,6 +340,7 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.md,
   },
   statusMessage: {
+    fontFamily: fonts.body,
     fontSize: 13,
     lineHeight: 19,
     color: palette.textSecondary,

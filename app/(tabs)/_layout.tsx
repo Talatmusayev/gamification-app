@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import { BarChart2, Sprout, Store } from 'lucide-react-native';
 import { StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { palette, spacing } from '@/theme/tokens';
+import { fonts, palette, spacing } from '@/theme/tokens';
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
@@ -24,8 +24,8 @@ export default function TabsLayout() {
           elevation: 0,
         },
         tabBarLabelStyle: {
+          fontFamily: fonts.bodyMedium,
           fontSize: 12,
-          fontWeight: '500',
           marginTop: 2,
         },
       }}

@@ -7,7 +7,7 @@ import { GardenSprite } from '@/components/ui/GardenSprite';
 import { SUNLIT_MEADOW_CATALOG } from '@/domain/catalog';
 import type { CatalogItem, ItemCategory } from '@/domain/types';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
-import { palette, radii, spacing } from '@/theme/tokens';
+import { fonts, palette, radii, spacing } from '@/theme/tokens';
 
 type FilterTab = 'all' | ItemCategory;
 
@@ -202,9 +202,9 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
   },
   title: {
+    fontFamily: fonts.displaySemiBold,
     fontSize: 26,
-    fontWeight: '600',
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
     color: palette.textPrimary,
   },
   balanceRow: {
@@ -225,8 +225,8 @@ const styles = StyleSheet.create({
     minHeight: 34,
   },
   balanceValue: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 14,
-    fontWeight: '600',
     color: palette.textPrimary,
     fontVariant: ['tabular-nums'],
   },
@@ -251,13 +251,13 @@ const styles = StyleSheet.create({
     borderColor: palette.accentMoss,
   },
   filterText: {
+    fontFamily: fonts.bodyMedium,
     fontSize: 13,
-    fontWeight: '500',
     color: palette.textSecondary,
   },
   filterTextActive: {
+    fontFamily: fonts.bodySemiBold,
     color: palette.accentMossText,
-    fontWeight: '600',
   },
   listContent: {
     paddingHorizontal: spacing.lg,
@@ -293,8 +293,8 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   itemName: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 15,
-    fontWeight: '600',
     color: palette.textPrimary,
     flexShrink: 1,
   },
@@ -304,8 +304,8 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   ownedTagText: {
+    fontFamily: fonts.bodyMedium,
     fontSize: 12,
-    fontWeight: '500',
     color: palette.accentMoss,
   },
   proTag: {
@@ -314,11 +314,12 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   proTagText: {
+    fontFamily: fonts.bodyMedium,
     fontSize: 12,
-    fontWeight: '500',
     color: palette.textMuted,
   },
   itemDescription: {
+    fontFamily: fonts.body,
     fontSize: 13,
     lineHeight: 18,
     color: palette.textSecondary,
@@ -335,8 +336,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   costValue: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 13,
-    fontWeight: '600',
     color: palette.textPrimary,
     fontVariant: ['tabular-nums'],
   },
@@ -357,8 +358,8 @@ const styles = StyleSheet.create({
     borderColor: palette.border,
   },
   placeButtonText: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 13,
-    fontWeight: '600',
     color: palette.accentMossText,
   },
   placeButtonTextDisabled: {

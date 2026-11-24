@@ -24,6 +24,54 @@ export const nightPalette = {
   accentLantern: '#E3B261',
 } as const;
 
+export const fonts = {
+  display: 'Lora_500Medium',
+  displaySemiBold: 'Lora_600SemiBold',
+  body: 'PlusJakartaSans_400Regular',
+  bodyMedium: 'PlusJakartaSans_500Medium',
+  bodySemiBold: 'PlusJakartaSans_600SemiBold',
+} as const;
+
+export const typography = {
+  displayLg: {
+    fontFamily: fonts.displaySemiBold,
+    fontSize: 28,
+    lineHeight: 36,
+    letterSpacing: -0.3,
+  },
+  displayMd: {
+    fontFamily: fonts.displaySemiBold,
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: -0.2,
+  },
+  displaySm: {
+    fontFamily: fonts.display,
+    fontSize: 18,
+    lineHeight: 24,
+  },
+  body: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  bodyMedium: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  label: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  caption: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12,
+    lineHeight: 16,
+  },
+} as const;
+
 export const spacing = {
   xs: 4,
   sm: 8,
@@ -49,6 +97,8 @@ export const motion = {
 
 export type DayPalette = typeof palette;
 export type NightPalette = typeof nightPalette;
+export type Fonts = typeof fonts;
+export type Typography = typeof typography;
 export type Spacing = typeof spacing;
 export type Radii = typeof radii;
 export type Motion = typeof motion;

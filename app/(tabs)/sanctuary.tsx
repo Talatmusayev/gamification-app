@@ -12,7 +12,7 @@ import { getCatalogItemById } from '@/domain/catalog';
 import { calculateHarmonyScore } from '@/domain/fog';
 import type { GardenPlacement } from '@/domain/types';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
-import { nightPalette, palette, radii, spacing } from '@/theme/tokens';
+import { fonts, nightPalette, palette, radii, spacing } from '@/theme/tokens';
 
 function getTodayDateKey(): string {
   const now = new Date();
@@ -334,11 +334,12 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   modeBannerTitle: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 14,
-    fontWeight: '600',
     color: palette.textPrimary,
   },
   modeBannerSub: {
+    fontFamily: fonts.body,
     fontSize: 13,
     color: palette.textSecondary,
     fontVariant: ['tabular-nums'],
@@ -368,6 +369,7 @@ const styles = StyleSheet.create({
   },
   feedbackText: {
     flex: 1,
+    fontFamily: fonts.body,
     fontSize: 13,
     color: palette.textSecondary,
   },
@@ -409,13 +411,13 @@ const styles = StyleSheet.create({
     backgroundColor: nightPalette.accentLantern,
   },
   actionLabel: {
+    fontFamily: fonts.bodyMedium,
     fontSize: 14,
-    fontWeight: '500',
     color: palette.textPrimary,
   },
   actionLabelPrimary: {
+    fontFamily: fonts.bodySemiBold,
     fontSize: 14,
-    fontWeight: '600',
     color: palette.accentMossText,
   },
 });
