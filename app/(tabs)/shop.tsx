@@ -36,7 +36,11 @@ export default function ShopScreen() {
     );
   }, [selectedFilter]);
 
-  const handleSelectItem = (item: CatalogItem) => {
+  const handleSelectItem = (item: CatalogItem, isProLocked: boolean) => {
+    if (isProLocked) {
+      router.push('/paywall');
+      return;
+    }
     router.push({
       pathname: '/(tabs)/sanctuary',
       params: { placeItemId: item.id },
@@ -97,21 +101,21 @@ export default function ShopScreen() {
         </View>
 
         <Pressable
-          onPress={() => handleSelectItem(item)}
-          disabled={!canPlace}
+          onPress={() => handleSelectItem(item, isProLocked)}
+          disabled={!canPlace && !isProLocked}
           hitSlop={6}
           accessibilityRole="button"
           accessibilityLabel={
             isProLocked
-              ? `${item.name} requires Sanctuary Pro`
+              ? `Try Sanctuary Pro to unlock ${item.name}`
               : canPlace
                 ? `Place ${item.name} in sanctuary`
                 : `Not enough Dew or Sunlight for ${item.name}`
           }
-          accessibilityState={{ disabled: !canPlace }}
+          accessibilityState={{ disabled: !canPlace && !isProLocked }}
           style={[
             styles.placeButton,
-            !canPlace && styles.placeButtonDisabled,
+            !canPlace && !isProLocked && styles.placeButtonDisabled,
           ]}
         >
           {isProLocked ? (
