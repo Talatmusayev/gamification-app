@@ -1,0 +1,4 @@
+# Dew & Bloom — Authorized Sellers for Apps (app-ads.txt)
+# Replace pub-0000000000000000 with your Google AdMob Publisher ID before publishing.
+# Format: <ad-system-domain>, <publisher-account-id>, <relationship>, <certification-authority-id>
+google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0

@@ -1,0 +1,63 @@
+:root {
+  /* Dew & Bloom Exact Palette — Zero Purple / Zero Violet */
+  --bg-ground: #faf8f4;
+  --bg-elevated: #ffffff;
+  --bg-soft: #f2efe9;
+  --bg-soft-deep: #e8e3d9;
+
+  --ink: #1e241e;
+  --ink-secondary: #545e54;
+  --ink-muted: #707a70;
+
+  --accent-moss: #365e44;
+  --accent-moss-hover: #2b4d37;
+  --accent-moss-tint: rgba(54, 94, 68, 0.09);
+
+  --accent-dew: #376675;
+  --accent-dew-tint: rgba(55, 102, 117, 0.1);
+
+  --accent-amber: #98601a;
+  --accent-amber-tint: rgba(152, 96, 26, 0.1);
+  --lantern-gold: #e3b261;
+  --lantern-gold-soft: rgba(227, 178, 97, 0.22);
+
+  /* Hairlines & Borders */
+  --hairline: rgba(30, 36, 30, 0.09);
+  --hairline-strong: rgba(30, 36, 30, 0.15);
+
+  /* Liquid Glass Material (inspired by liquid-glass-js) */
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  --glass-bg-strong: rgba(255, 255, 255, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.75);
+  --glass-border-outer: rgba(30, 36, 30, 0.08);
+  --glass-shadow:
+    0 10px 30px -8px rgba(30, 36, 30, 0.09),
+    0 2px 6px rgba(30, 36, 30, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  --glass-blur: blur(20px) saturate(160%);
+
+  /* Card Shadows */
+  --card-shadow:
+    0 1px 2px rgba(30, 36, 30, 0.04),
+    0 12px 32px -12px rgba(30, 36, 30, 0.07);
+  --card-shadow-hover:
+    0 4px 12px rgba(30, 36, 30, 0.06),
+    0 20px 44px -14px rgba(30, 36, 30, 0.11);
+
+  /* Typography */
+  --font-serif: 'Lora', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Layout Rhythm */
+  --wrap-max: 1180px;
+  --wrap-pad: clamp(20px, 4vw, 48px);
+  --radius-sm: 10px;
+  --radius-md: 18px;
+  --radius-lg: 26px;
+  --radius-pill: 9999px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 180ms;
+  --dur-med: 320ms;
+}

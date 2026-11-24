@@ -1,15 +1,22 @@
 import { useRouter } from 'expo-router';
-import { Check, Droplets, Lock, Plus, Sun } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { Check, Droplets, Lock, Play, Plus, Sun } from 'lucide-react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GardenSprite } from '@/components/ui/GardenSprite';
 import { SUNLIT_MEADOW_CATALOG } from '@/domain/catalog';
 import type { CatalogItem, ItemCategory } from '@/domain/types';
+import {
+  getRemainingRewardedAds,
+  getWatchedTodayCount,
+  loadWatchedTodayCount,
+  REWARDED_DEW_AMOUNT,
+  watchRewardedDewAd,
+} from '@/services/rewardedAdsService';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
 import { fonts, palette, radii, spacing } from '@/theme/tokens';
-import { hapticSelection } from '@/utils/haptics';
+import { hapticSelection, hapticSuccess } from '@/utils/haptics';
 
 type FilterTab = 'all' | ItemCategory;
 
@@ -25,8 +32,57 @@ export default function ShopScreen() {
   const reducedMotion = useReducedMotion();
   const profile = useSanctuaryStore((s) => s.profile);
   const ownedItemIds = useSanctuaryStore((s) => s.ownedItemIds);
+  const awardBedtimeDew = useSanctuaryStore((s) => s.awardBedtimeDew);
 
   const [selectedFilter, setSelectedFilter] = useState<FilterTab>('all');
+  const [watchedToday, setWatchedToday] = useState<number>(() => getWatchedTodayCount());
+  const [isWatchingAd, setIsWatchingAd] = useState(false);
+  const [rewardFeedback, setRewardFeedback] = useState<string | null>(null);
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!profile.isPro) {
+      void loadWatchedTodayCount().then((count) => {
+        if (active) {
+          setWatchedToday(count);
+        }
+      });
+    }
+    return () => {
+      active = false;
+      if (feedbackTimerRef.current) {
+        clearTimeout(feedbackTimerRef.current);
+      }
+    };
+  }, [profile.isPro]);
+
+  const remainingRewardedAds = getRemainingRewardedAds(watchedToday);
+
+  const handleWatchRewardedDew = async () => {
+    if (isWatchingAd || profile.isPro || remainingRewardedAds <= 0) {
+      return;
+    }
+    hapticSelection();
+    setIsWatchingAd(true);
+    try {
+      const result = await watchRewardedDewAd({ isPro: profile.isPro });
+      if (result.ok && result.dewAwarded > 0) {
+        awardBedtimeDew(result.dewAwarded);
+        setWatchedToday(getWatchedTodayCount());
+        hapticSuccess();
+        setRewardFeedback(`+${result.dewAwarded} Dew gathered`);
+        if (feedbackTimerRef.current) {
+          clearTimeout(feedbackTimerRef.current);
+        }
+        feedbackTimerRef.current = setTimeout(() => {
+          setRewardFeedback(null);
+        }, 2200);
+      }
+    } finally {
+      setIsWatchingAd(false);
+    }
+  };
 
   const filteredItems = useMemo(() => {
     if (selectedFilter === 'all') {
@@ -192,6 +248,41 @@ export default function ShopScreen() {
         })}
       </View>
 
+      {!profile.isPro && remainingRewardedAds > 0 ? (
+        <View style={styles.rewardedRow}>
+          <Pressable
+            onPress={() => {
+              void handleWatchRewardedDew();
+            }}
+            disabled={isWatchingAd}
+            hitSlop={4}
+            accessibilityRole="button"
+            accessibilityLabel={`Gather +${REWARDED_DEW_AMOUNT} Dew by watching a short video`}
+            accessibilityState={{ disabled: isWatchingAd, busy: isWatchingAd }}
+            style={({ pressed }) => [
+              styles.rewardedPill,
+              isWatchingAd && styles.rewardedPillBusy,
+              pressed && !reducedMotion && styles.placeButtonPressed,
+            ]}
+          >
+            <Droplets size={14} strokeWidth={1.7} color={palette.accentDew} />
+            <Text style={styles.rewardedPillText}>
+              {isWatchingAd
+                ? 'Gathering Dew...'
+                : rewardFeedback ?? `Gather +${REWARDED_DEW_AMOUNT} Dew · Short video`}
+            </Text>
+            <Play size={12} strokeWidth={1.8} color={palette.accentDew} />
+          </Pressable>
+        </View>
+      ) : !profile.isPro && rewardFeedback ? (
+        <View style={styles.rewardedRow}>
+          <View style={styles.rewardedFeedbackPill}>
+            <Droplets size={14} strokeWidth={1.7} color={palette.accentDew} />
+            <Text style={styles.rewardedPillText}>{rewardFeedback}</Text>
+          </View>
+        </View>
+      ) : null}
+
       <FlatList
         data={filteredItems}
         numColumns={2}
@@ -275,6 +366,44 @@ const styles = StyleSheet.create({
   filterTextActive: {
     fontFamily: fonts.bodySemiBold,
     color: palette.accentMossText,
+  },
+  rewardedRow: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+  },
+  rewardedPill: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs + 2,
+    minHeight: 38,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.full,
+    backgroundColor: palette.surfaceElevated,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.border,
+  },
+  rewardedPillBusy: {
+    opacity: 0.65,
+  },
+  rewardedFeedbackPill: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs + 2,
+    minHeight: 38,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.full,
+    backgroundColor: palette.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.border,
+  },
+  rewardedPillText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13,
+    color: palette.textSecondary,
   },
   listContent: {
     paddingHorizontal: spacing.lg,

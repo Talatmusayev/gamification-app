@@ -13,6 +13,7 @@ import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { registerNativeHealthProvider } from '@/services/nativeProviders';
+import { registerNativePurchasesProvider } from '@/services/nativePurchasesProvider';
 import { palette } from '@/theme/tokens';
 
 void SplashScreen.preventAutoHideAsync();
@@ -28,6 +29,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     registerNativeHealthProvider();
+    registerNativePurchasesProvider();
   }, []);
 
   useEffect(() => {
