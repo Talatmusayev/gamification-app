@@ -466,7 +466,11 @@ export default function SanctuaryScreen() {
           <View style={styles.careBar}>
             <View style={styles.careIdentity}>
               <View style={styles.careSpriteWrap}>
-                <GardenSprite assetKey={selectedItem.assetKey} size={36} />
+                <GardenSprite
+                  assetKey={selectedItem.assetKey}
+                  size={40}
+                  growthStage={selectedStage}
+                />
               </View>
               <View style={styles.careCopy}>
                 <Text style={styles.careTitle} numberOfLines={1}>

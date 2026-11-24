@@ -634,7 +634,7 @@ function AnimatedPlacementSprite({
       ) : null}
 
       <Animated.View style={animatedStyle}>
-        <GardenSprite assetKey={assetKey} size={size} />
+        <GardenSprite assetKey={assetKey} size={size} growthStage={growthStage} />
       </Animated.View>
 
       {isNew && isPlant && !reducedMotion ? (
