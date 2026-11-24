@@ -9,6 +9,7 @@ import { SUNLIT_MEADOW_CATALOG } from '@/domain/catalog';
 import type { CatalogItem, ItemCategory } from '@/domain/types';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
 import { fonts, palette, radii, spacing } from '@/theme/tokens';
+import { hapticSelection } from '@/utils/haptics';
 
 type FilterTab = 'all' | ItemCategory;
 
@@ -37,6 +38,7 @@ export default function ShopScreen() {
   }, [selectedFilter]);
 
   const handleSelectItem = (item: CatalogItem, isProLocked: boolean) => {
+    hapticSelection();
     if (isProLocked) {
       router.push('/paywall');
       return;
@@ -170,7 +172,12 @@ export default function ShopScreen() {
           return (
             <Pressable
               key={tab.id}
-              onPress={() => setSelectedFilter(tab.id)}
+              onPress={() => {
+                if (tab.id !== selectedFilter) {
+                  hapticSelection();
+                }
+                setSelectedFilter(tab.id);
+              }}
               hitSlop={4}
               accessibilityRole="tab"
               accessibilityLabel={`Filter by ${tab.label}`}

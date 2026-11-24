@@ -1,7 +1,5 @@
-import * as Haptics from 'expo-haptics';
 import type { ReactNode } from 'react';
 import {
-  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -17,6 +15,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { fonts, palette, radii, spacing, springs } from '@/theme/tokens';
+import { hapticLight } from '@/utils/haptics';
 
 export type BotanicalButtonVariant = 'primary' | 'secondary' | 'ghost';
 
@@ -86,8 +85,8 @@ export function BotanicalButton({
     if (disabled) {
       return;
     }
-    if (haptic && Platform.OS !== 'web') {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    if (haptic) {
+      hapticLight();
     }
     onPress();
   };

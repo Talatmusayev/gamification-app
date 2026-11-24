@@ -15,6 +15,7 @@ import {
 } from '@/services/purchasesService';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
 import { fonts, motion, palette, radii, spacing } from '@/theme/tokens';
+import { hapticSelection, hapticSuccess } from '@/utils/haptics';
 
 const PRO_BENEFITS = [
   'All botanical flora, stone lanterns, and meadow critters',
@@ -115,6 +116,7 @@ export default function PaywallScreen() {
         price_usd: planInfo?.priceUsd ?? 19.99,
       });
 
+      hapticSuccess();
       navigateToSanctuary();
     } finally {
       setSubmitting(false);
@@ -133,6 +135,7 @@ export default function PaywallScreen() {
             isPro: true,
           },
         }));
+        hapticSuccess();
         setFeedback('Pro sanctuary restored on this device.');
       } else {
         setFeedback('No active Pro subscription found for this account.');
@@ -195,7 +198,12 @@ export default function PaywallScreen() {
               return (
                 <Pressable
                   key={plan.id}
-                  onPress={() => setSelectedPlanId(plan.id)}
+                  onPress={() => {
+                    if (plan.id !== selectedPlanId) {
+                      hapticSelection();
+                    }
+                    setSelectedPlanId(plan.id);
+                  }}
                   accessibilityRole="radio"
                   accessibilityState={{ selected }}
                   accessibilityLabel={`${plan.title}, ${plan.priceLabel}`}

@@ -18,6 +18,7 @@ import { deleteAccount, getCurrentUser, signOut } from '@/services/authService';
 import { syncProfileGoals } from '@/services/syncService';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
 import { fonts, palette, radii, spacing } from '@/theme/tokens';
+import { hapticSelection } from '@/utils/haptics';
 
 const MIN_SLEEP_MIN = 300;
 const MAX_SLEEP_MIN = 720;
@@ -154,9 +155,10 @@ export default function SettingsScreen() {
             </View>
             <View style={styles.stepper}>
               <Pressable
-                onPress={() =>
-                  setSleepGoalMin((prev) => Math.max(MIN_SLEEP_MIN, prev - SLEEP_STEP_MIN))
-                }
+                onPress={() => {
+                  hapticSelection();
+                  setSleepGoalMin((prev) => Math.max(MIN_SLEEP_MIN, prev - SLEEP_STEP_MIN));
+                }}
                 hitSlop={8}
                 accessibilityRole="button"
                 accessibilityLabel="Decrease sleep goal by 15 minutes"
@@ -165,9 +167,10 @@ export default function SettingsScreen() {
                 <Minus size={18} strokeWidth={1.5} color={palette.textPrimary} />
               </Pressable>
               <Pressable
-                onPress={() =>
-                  setSleepGoalMin((prev) => Math.min(MAX_SLEEP_MIN, prev + SLEEP_STEP_MIN))
-                }
+                onPress={() => {
+                  hapticSelection();
+                  setSleepGoalMin((prev) => Math.min(MAX_SLEEP_MIN, prev + SLEEP_STEP_MIN));
+                }}
                 hitSlop={8}
                 accessibilityRole="button"
                 accessibilityLabel="Increase sleep goal by 15 minutes"
@@ -190,9 +193,10 @@ export default function SettingsScreen() {
             </View>
             <View style={styles.stepper}>
               <Pressable
-                onPress={() =>
-                  setStepGoal((prev) => Math.max(MIN_STEPS, prev - STEPS_INCREMENT))
-                }
+                onPress={() => {
+                  hapticSelection();
+                  setStepGoal((prev) => Math.max(MIN_STEPS, prev - STEPS_INCREMENT));
+                }}
                 hitSlop={8}
                 accessibilityRole="button"
                 accessibilityLabel="Decrease step goal by 500 steps"
@@ -201,9 +205,10 @@ export default function SettingsScreen() {
                 <Minus size={18} strokeWidth={1.5} color={palette.textPrimary} />
               </Pressable>
               <Pressable
-                onPress={() =>
-                  setStepGoal((prev) => Math.min(MAX_STEPS, prev + STEPS_INCREMENT))
-                }
+                onPress={() => {
+                  hapticSelection();
+                  setStepGoal((prev) => Math.min(MAX_STEPS, prev + STEPS_INCREMENT));
+                }}
                 hitSlop={8}
                 accessibilityRole="button"
                 accessibilityLabel="Increase step goal by 500 steps"
