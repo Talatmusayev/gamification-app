@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Moon, Move, Share2, Sun, X } from 'lucide-react-native';
+import { Moon, Move, Share2, Sun, Users, X } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,7 +14,12 @@ import type { GardenPlacement } from '@/domain/types';
 import { trackEvent } from '@/services/analyticsService';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
 import { fonts, nightPalette, palette, radii, spacing } from '@/theme/tokens';
-import { hapticLight, hapticMedium, hapticWarning } from '@/utils/haptics';
+import {
+  hapticLight,
+  hapticMedium,
+  hapticSelection,
+  hapticWarning,
+} from '@/utils/haptics';
 
 function getTodayDateKey(): string {
   const now = new Date();
@@ -190,6 +195,20 @@ export default function SanctuaryScreen() {
           onPlacementPress={handlePlacementPress}
         />
 
+        <Pressable
+          onPress={() => {
+            hapticSelection();
+            router.push('/duo');
+          }}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Open Duo shared meadow"
+          style={styles.duoPill}
+        >
+          <Users size={16} strokeWidth={1.6} color={palette.accentMoss} />
+          <Text style={styles.duoPillText}>Duo</Text>
+        </Pressable>
+
         {placingItem ? (
           <View style={styles.modeBanner}>
             <View style={styles.modeBannerCopy}>
@@ -325,6 +344,27 @@ const styles = StyleSheet.create({
   canvasWrap: {
     flex: 1,
     position: 'relative',
+  },
+  duoPill: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.lg,
+    minHeight: 44,
+    minWidth: 44,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.full,
+    backgroundColor: palette.surfaceElevated,
+    borderWidth: 1,
+    borderColor: palette.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+  },
+  duoPillText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13,
+    color: palette.textPrimary,
   },
   modeBanner: {
     position: 'absolute',
