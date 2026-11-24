@@ -1,6 +1,6 @@
-export type TrackingMode = 'apple_health' | 'health_connect' | 'manual';
+export type TrackingMode = 'health_sync' | 'phone_only' | 'apple_health' | 'health_connect' | 'manual';
 
-export type FogLevel = 'clear' | 'light_mist' | 'cozy_fog';
+export type FogLevel = 0 | 1 | 2 | 3;
 
 export type ItemCategory = 'flora' | 'decor' | 'lantern' | 'companion' | 'terrain';
 
@@ -66,10 +66,10 @@ export interface MorningRevealInput {
 }
 
 export interface MorningRevealResult {
+  alreadyRevealed: boolean;
   dewAwarded: number;
   sunlightAwarded: number;
-  nextFogLevel: FogLevel;
-  sleepRatio: number;
-  stepRatio: number;
-  aiInsight: string;
+  newFogLevel: FogLevel;
+  keeperNote: string;
+  log: DailyLog;
 }
