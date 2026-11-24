@@ -11,6 +11,7 @@ import { ShareProgressCard } from '@/components/ShareProgressCard';
 import { getCatalogItemById } from '@/domain/catalog';
 import { calculateHarmonyScore } from '@/domain/fog';
 import type { GardenPlacement } from '@/domain/types';
+import { trackEvent } from '@/services/analyticsService';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
 import { fonts, nightPalette, palette, radii, spacing } from '@/theme/tokens';
 import { hapticLight, hapticMedium, hapticWarning } from '@/utils/haptics';
@@ -86,6 +87,7 @@ export default function SanctuaryScreen() {
       const result = placeCatalogItem(placingItemId, x, y);
       if (result.ok) {
         hapticMedium();
+        trackEvent('garden_item_placed', { item_slug: placingItem.id });
         setPlacingItemId(null);
         if (placeItemId) {
           router.setParams({ placeItemId: undefined });
@@ -154,6 +156,15 @@ export default function SanctuaryScreen() {
     } else if (result.alreadyRevealed) {
       setPendingReveal(result);
     }
+  };
+
+  const handleClearMist = () => {
+    if (pendingReveal && !pendingReveal.alreadyRevealed) {
+      trackEvent('morning_reveal_completed', {
+        fog_cleared: pendingReveal.newFogLevel === 0,
+      });
+    }
+    dismissPendingReveal();
   };
 
   const isPlacingOwned = placingItem
@@ -278,7 +289,7 @@ export default function SanctuaryScreen() {
       <MorningRevealModal
         visible={Boolean(pendingReveal)}
         reveal={pendingReveal}
-        onClearMist={dismissPendingReveal}
+        onClearMist={handleClearMist}
       />
 
       <GoodnightLanternModal
