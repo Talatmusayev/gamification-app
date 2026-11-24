@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { Check, Droplets, Lock, Plus, Sun } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GardenSprite } from '@/components/ui/GardenSprite';
 import { SUNLIT_MEADOW_CATALOG } from '@/domain/catalog';
@@ -20,6 +21,7 @@ const FILTER_TABS: readonly { id: FilterTab; label: string }[] = [
 
 export default function ShopScreen() {
   const router = useRouter();
+  const reducedMotion = useReducedMotion();
   const profile = useSanctuaryStore((s) => s.profile);
   const ownedItemIds = useSanctuaryStore((s) => s.ownedItemIds);
 
@@ -41,7 +43,7 @@ export default function ShopScreen() {
     });
   };
 
-  const renderItem = ({ item }: { item: CatalogItem }) => {
+  const renderItem = ({ item, index }: { item: CatalogItem; index: number }) => {
     const isOwned = ownedItemIds.includes(item.id);
     const isProLocked = item.isPro && !profile.isPro && !isOwned;
     const canAfford =
@@ -49,9 +51,13 @@ export default function ShopScreen() {
       (profile.dewBalance >= item.dewCost &&
         profile.sunlightBalance >= item.sunlightCost);
     const canPlace = !isProLocked && canAfford;
+    const entering =
+      !reducedMotion && index < 6
+        ? FadeInDown.delay(index * 35).duration(220)
+        : undefined;
 
     return (
-      <View style={styles.itemCard}>
+      <Animated.View entering={entering} style={styles.itemCard}>
         <View style={styles.spriteBox}>
           <GardenSprite assetKey={item.assetKey} size={50} />
         </View>
@@ -126,7 +132,7 @@ export default function ShopScreen() {
             {isOwned ? 'Place' : isProLocked ? 'Pro' : 'Place'}
           </Text>
         </Pressable>
-      </View>
+      </Animated.View>
     );
   };
 

@@ -1,10 +1,12 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
+  withSequence,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Polygon } from 'react-native-svg';
@@ -12,7 +14,7 @@ import { GardenSprite } from '@/components/ui/GardenSprite';
 import { getCatalogItemById } from '@/domain/catalog';
 import { GRID_SIZE, gridToScreen } from '@/domain/grid';
 import type { FogLevel, GardenPlacement } from '@/domain/types';
-import { motion, palette } from '@/theme/tokens';
+import { motion, palette, springs } from '@/theme/tokens';
 
 const TILE_WIDTH = 52;
 const TILE_HEIGHT = 28;
@@ -24,8 +26,8 @@ const ISLAND_DEPTH = 12;
 
 const MIN_SCALE = 0.75;
 const MAX_SCALE = 1.85;
-const MAX_PAN_X = 160;
-const MAX_PAN_Y = 140;
+const SOFT_PAN_BOUND = 120;
+const RUBBER_BAND_SIZE = 72;
 
 const FOG_OPACITY_BY_LEVEL: Record<FogLevel, number> = {
   0: 0,
@@ -94,6 +96,62 @@ function clampWorklet(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
+function rubberBandWorklet(
+  value: number,
+  limit: number,
+  bandSize: number,
+): number {
+  'worklet';
+  if (value >= -limit && value <= limit) {
+    return value;
+  }
+  const sign = value > limit ? 1 : -1;
+  const excess = Math.abs(value) - limit;
+  const damped = (1 - 1 / ((excess * 0.55) / bandSize + 1)) * bandSize;
+  return sign * (limit + damped);
+}
+
+interface AnimatedPlacementSpriteProps {
+  assetKey: string;
+  size: number;
+  isNew: boolean;
+  reducedMotion: boolean;
+}
+
+function AnimatedPlacementSprite({
+  assetKey,
+  size,
+  isNew,
+  reducedMotion,
+}: AnimatedPlacementSpriteProps) {
+  const scaleX = useSharedValue(1);
+  const scaleY = useSharedValue(1);
+
+  useEffect(() => {
+    if (!isNew || reducedMotion) {
+      return;
+    }
+    scaleX.value = withSequence(
+      withTiming(1.12, { duration: 90 }),
+      withSpring(1, springs.pop),
+    );
+    scaleY.value = withSequence(
+      withTiming(0.88, { duration: 90 }),
+      withSpring(1, springs.pop),
+    );
+  }, [isNew, reducedMotion, scaleX, scaleY]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scaleX: scaleX.value }, { scaleY: scaleY.value }],
+  }));
+
+  return (
+    <Animated.View style={animatedStyle}>
+      <GardenSprite assetKey={assetKey} size={size} />
+    </Animated.View>
+  );
+}
+
 export function IsometricCanvas({
   placements,
   fogLevel,
@@ -128,21 +186,55 @@ export function IsometricCanvas({
   const composedGesture = useMemo(() => {
     const panGesture = Gesture.Pan()
       .minDistance(6)
-      .onUpdate((event) => {
-        translateX.value = clampWorklet(
-          savedTranslateX.value + event.translationX,
-          -MAX_PAN_X,
-          MAX_PAN_X,
-        );
-        translateY.value = clampWorklet(
-          savedTranslateY.value + event.translationY,
-          -MAX_PAN_Y,
-          MAX_PAN_Y,
-        );
-      })
-      .onEnd(() => {
+      .onStart(() => {
         savedTranslateX.value = translateX.value;
         savedTranslateY.value = translateY.value;
+      })
+      .onUpdate((event) => {
+        const nextX = savedTranslateX.value + event.translationX;
+        const nextY = savedTranslateY.value + event.translationY;
+        if (reducedMotion) {
+          translateX.value = clampWorklet(nextX, -SOFT_PAN_BOUND, SOFT_PAN_BOUND);
+          translateY.value = clampWorklet(nextY, -SOFT_PAN_BOUND, SOFT_PAN_BOUND);
+        } else {
+          translateX.value = rubberBandWorklet(
+            nextX,
+            SOFT_PAN_BOUND,
+            RUBBER_BAND_SIZE,
+          );
+          translateY.value = rubberBandWorklet(
+            nextY,
+            SOFT_PAN_BOUND,
+            RUBBER_BAND_SIZE,
+          );
+        }
+      })
+      .onEnd(() => {
+        const clampedX = clampWorklet(
+          translateX.value,
+          -SOFT_PAN_BOUND,
+          SOFT_PAN_BOUND,
+        );
+        const clampedY = clampWorklet(
+          translateY.value,
+          -SOFT_PAN_BOUND,
+          SOFT_PAN_BOUND,
+        );
+        if (reducedMotion) {
+          translateX.value = clampedX;
+          translateY.value = clampedY;
+        } else {
+          translateX.value =
+            translateX.value === clampedX
+              ? clampedX
+              : withSpring(clampedX, springs.gentle);
+          translateY.value =
+            translateY.value === clampedY
+              ? clampedY
+              : withSpring(clampedY, springs.gentle);
+        }
+        savedTranslateX.value = clampedX;
+        savedTranslateY.value = clampedY;
       });
 
     const pinchGesture = Gesture.Pinch()
@@ -159,6 +251,7 @@ export function IsometricCanvas({
 
     return Gesture.Simultaneous(panGesture, pinchGesture);
   }, [
+    reducedMotion,
     translateX,
     translateY,
     savedTranslateX,
@@ -185,6 +278,15 @@ export function IsometricCanvas({
       map.set(`${placement.x},${placement.y}`, placement);
     }
     return map;
+  }, [placements]);
+
+  const seenPlacementIdsRef = useRef<Set<string> | null>(null);
+  if (seenPlacementIdsRef.current === null) {
+    seenPlacementIdsRef.current = new Set(placements.map((p) => p.id));
+  }
+
+  useEffect(() => {
+    seenPlacementIdsRef.current = new Set(placements.map((p) => p.id));
   }, [placements]);
 
   const sortedPlacements = useMemo(
@@ -343,7 +445,12 @@ export function IsometricCanvas({
                     isSelected && styles.spriteSelected,
                   ]}
                 >
-                  <GardenSprite assetKey={item.assetKey} size={spriteSize} />
+                  <AnimatedPlacementSprite
+                    assetKey={item.assetKey}
+                    size={spriteSize}
+                    isNew={!seenPlacementIdsRef.current?.has(placement.id)}
+                    reducedMotion={Boolean(reducedMotion)}
+                  />
                 </View>
               );
             })}

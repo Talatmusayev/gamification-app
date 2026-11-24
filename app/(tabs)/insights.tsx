@@ -1,7 +1,14 @@
 import { useRouter } from 'expo-router';
 import { Footprints, Leaf, Moon, Settings, Sparkles } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatSleepDuration } from '@/components/MorningRevealModal';
 import { BotanicalButton } from '@/components/ui/BotanicalButton';
@@ -57,8 +64,44 @@ function formatCompactSteps(steps: number): string {
   return String(steps);
 }
 
+interface AnimatedBarProps {
+  targetHeight: number;
+  color: string;
+  reducedMotion: boolean;
+}
+
+function AnimatedBar({ targetHeight, color, reducedMotion }: AnimatedBarProps) {
+  const height = useSharedValue(reducedMotion ? targetHeight : 0);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      height.value = targetHeight;
+      return;
+    }
+    height.value = withTiming(targetHeight, {
+      duration: 260,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [height, reducedMotion, targetHeight]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    height: height.value,
+  }));
+
+  return (
+    <Animated.View
+      style={[
+        styles.barFill,
+        { backgroundColor: color },
+        animatedStyle,
+      ]}
+    />
+  );
+}
+
 export default function InsightsScreen() {
   const router = useRouter();
+  const reducedMotion = Boolean(useReducedMotion());
   const profile = useSanctuaryStore((s) => s.profile);
   const dailyLogs = useSanctuaryStore((s) => s.dailyLogs);
   const triggerMorningReveal = useSanctuaryStore((s) => s.triggerMorningReveal);
@@ -216,15 +259,12 @@ export default function InsightsScreen() {
                 <View key={`sleep_${point.dateKey}`} style={styles.barColumn}>
                   <Text style={styles.barTopValue}>{hoursLabel}</Text>
                   <View style={styles.barTrack}>
-                    <View
-                      style={[
-                        styles.barFill,
-                        {
-                          height: barHeight,
-                          backgroundColor:
-                            point.sleepMin > 0 ? palette.accentDew : palette.border,
-                        },
-                      ]}
+                    <AnimatedBar
+                      targetHeight={barHeight}
+                      color={
+                        point.sleepMin > 0 ? palette.accentDew : palette.border
+                      }
+                      reducedMotion={reducedMotion}
                     />
                   </View>
                   <Text style={styles.barDayLabel}>{point.dayLabel}</Text>
@@ -259,15 +299,12 @@ export default function InsightsScreen() {
                     {point.steps > 0 ? formatCompactSteps(point.steps) : '—'}
                   </Text>
                   <View style={styles.barTrack}>
-                    <View
-                      style={[
-                        styles.barFill,
-                        {
-                          height: barHeight,
-                          backgroundColor:
-                            point.steps > 0 ? palette.accentSunlight : palette.border,
-                        },
-                      ]}
+                    <AnimatedBar
+                      targetHeight={barHeight}
+                      color={
+                        point.steps > 0 ? palette.accentSunlight : palette.border
+                      }
+                      reducedMotion={reducedMotion}
                     />
                   </View>
                   <Text style={styles.barDayLabel}>{point.dayLabel}</Text>
