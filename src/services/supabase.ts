@@ -42,6 +42,43 @@ export type DewDailyLogRow = {
   ai_insight: string;
 };
 
+export type DewDuoGardenRow = {
+  id: string;
+  name: string;
+  invite_code: string;
+  biome_id: string;
+  created_by: string;
+  created_at: string;
+};
+
+export type DewDuoMemberRow = {
+  garden_id: string;
+  user_id: string;
+  display_name: string;
+  role: 'owner' | 'partner';
+  joined_at: string;
+};
+
+export type DewDuoPlacementRow = {
+  id: string;
+  garden_id: string;
+  placed_by: string;
+  item_id: string;
+  grid_x: number;
+  grid_y: number;
+  placed_at: string;
+};
+
+export type DewSunlightNudgeRow = {
+  id: string;
+  garden_id: string;
+  sender_id: string;
+  recipient_id: string;
+  nudge_date: string;
+  message: string;
+  created_at: string;
+};
+
 export type DewDatabase = {
   public: {
     Tables: {
@@ -54,6 +91,62 @@ export type DewDatabase = {
       dew_daily_logs: {
         Row: DewDailyLogRow;
         Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      dew_duo_gardens: {
+        Row: DewDuoGardenRow;
+        Insert: {
+          id?: string;
+          name: string;
+          invite_code: string;
+          biome_id?: string;
+          created_by: string;
+        };
+        Update: {
+          name?: string;
+        };
+        Relationships: [];
+      };
+      dew_duo_members: {
+        Row: DewDuoMemberRow;
+        Insert: {
+          garden_id: string;
+          user_id: string;
+          display_name: string;
+          role: 'owner' | 'partner';
+        };
+        Update: {
+          display_name?: string;
+        };
+        Relationships: [];
+      };
+      dew_duo_placements: {
+        Row: DewDuoPlacementRow;
+        Insert: {
+          id?: string;
+          garden_id: string;
+          placed_by: string;
+          item_id: string;
+          grid_x: number;
+          grid_y: number;
+        };
+        Update: {
+          grid_x?: number;
+          grid_y?: number;
+        };
+        Relationships: [];
+      };
+      dew_sunlight_nudges: {
+        Row: DewSunlightNudgeRow;
+        Insert: {
+          id?: string;
+          garden_id: string;
+          sender_id: string;
+          recipient_id: string;
+          nudge_date: string;
+          message: string;
+        };
         Update: Record<string, never>;
         Relationships: [];
       };
@@ -77,6 +170,13 @@ export type DewDatabase = {
           sunlight_balance: number;
           log: DewDailyLogRow;
         };
+      };
+      dew_join_duo_garden: {
+        Args: {
+          p_invite_code: string;
+          p_display_name: string;
+        };
+        Returns: DewDuoGardenRow;
       };
     };
     Enums: { [_ in never]: never };
