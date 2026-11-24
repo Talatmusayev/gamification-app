@@ -1,7 +1,8 @@
 import * as Sharing from 'expo-sharing';
 import { Droplets, Leaf, Share2, Sprout, Sun, X } from 'lucide-react-native';
-import { type ComponentRef, useRef, useState } from 'react';
+import { type ComponentRef, useEffect, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 import Svg, { Polygon } from 'react-native-svg';
 import ViewShot from 'react-native-view-shot';
 import { BotanicalButton } from '@/components/ui/BotanicalButton';
@@ -48,9 +49,21 @@ export function ShareProgressCard({
   windowDays,
   onClose,
 }: ShareProgressCardProps) {
+  const reducedMotion = useReducedMotion();
   const viewShotRef = useRef<ComponentRef<typeof ViewShot>>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [sharing, setSharing] = useState(false);
+
+  useEffect(() => {
+    if (!visible) {
+      setStatusMessage(null);
+    }
+  }, [visible]);
+
+  const handleClose = () => {
+    setStatusMessage(null);
+    onClose();
+  };
 
   if (!visible) {
     return null;
@@ -95,15 +108,15 @@ export function ShareProgressCard({
     <Modal
       visible={visible}
       transparent
-      animationType="fade"
-      onRequestClose={onClose}
+      animationType={reducedMotion ? 'none' : 'fade'}
+      onRequestClose={handleClose}
     >
       <View style={styles.backdrop}>
         <View style={styles.sheet} accessibilityViewIsModal>
           <View style={styles.headerRow}>
             <Text style={styles.headerTitle}>Share sanctuary</Text>
             <Pressable
-              onPress={onClose}
+              onPress={handleClose}
               hitSlop={10}
               accessibilityRole="button"
               accessibilityLabel="Close share card"

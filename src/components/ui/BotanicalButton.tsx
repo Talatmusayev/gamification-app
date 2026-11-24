@@ -29,6 +29,7 @@ export interface BotanicalButtonProps {
   accessibilityLabel?: string;
   accessibilityHint?: string;
   fullWidth?: boolean;
+  haptic?: boolean;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }
@@ -45,6 +46,7 @@ export function BotanicalButton({
   accessibilityLabel,
   accessibilityHint,
   fullWidth = false,
+  haptic = true,
   style,
   testID,
 }: BotanicalButtonProps) {
@@ -73,7 +75,7 @@ export function BotanicalButton({
     if (disabled) {
       return;
     }
-    if (Platform.OS !== 'web') {
+    if (haptic && Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     }
     onPress();

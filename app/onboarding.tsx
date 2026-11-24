@@ -24,7 +24,6 @@ import {
 } from 'react-native';
 import Animated, {
   FadeInDown,
-  FadeOutUp,
   useReducedMotion,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -36,7 +35,7 @@ import {
 import { SUNLIT_MEADOW_CATALOG } from '@/domain/catalog';
 import type { CatalogItem, TrackingMode } from '@/domain/types';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
-import { motion, palette, radii, spacing } from '@/theme/tokens';
+import { palette, radii, spacing } from '@/theme/tokens';
 
 const TOTAL_STEPS = 4;
 
@@ -145,9 +144,6 @@ export default function OnboardingScreen() {
   };
 
   const enteringAnim = reducedMotion ? undefined : FadeInDown.duration(240);
-  const exitingAnim = reducedMotion
-    ? undefined
-    : FadeOutUp.duration(motion.exitMs);
 
   const ctaLabel =
     step === 1
@@ -183,7 +179,11 @@ export default function OnboardingScreen() {
           )}
         </View>
 
-        <View style={styles.progressTrack} accessibilityElementsHidden>
+        <View
+          style={styles.progressTrack}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        >
           {Array.from({ length: TOTAL_STEPS }).map((_, index) => {
             const segmentStep = index + 1;
             const filled = segmentStep <= step;
@@ -214,7 +214,6 @@ export default function OnboardingScreen() {
         <Animated.View
           key={`onboarding-step-${step}`}
           entering={enteringAnim}
-          exiting={exitingAnim}
           style={styles.stepBody}
         >
           {step === 1 && (
@@ -547,7 +546,7 @@ export default function OnboardingScreen() {
                 <Pressable
                   onPress={() => handleSelectTracking('health_sync')}
                   accessibilityRole="button"
-                  accessibilityLabel="Health Sync, coming in Plan 3"
+                  accessibilityLabel="Health Sync, coming soon"
                   accessibilityState={{
                     selected: trackingMode === 'health_sync',
                   }}
@@ -567,7 +566,7 @@ export default function OnboardingScreen() {
                     </View>
                     <View style={styles.mutedBadge}>
                       <Text style={styles.mutedBadgeText}>
-                        Coming in Plan 3
+                        Coming soon
                       </Text>
                     </View>
                     <View style={styles.spacer} />

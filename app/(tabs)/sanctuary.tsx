@@ -12,7 +12,7 @@ import { getCatalogItemById } from '@/domain/catalog';
 import { calculateHarmonyScore } from '@/domain/fog';
 import type { GardenPlacement } from '@/domain/types';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
-import { palette, radii, spacing } from '@/theme/tokens';
+import { nightPalette, palette, radii, spacing } from '@/theme/tokens';
 
 function getTodayDateKey(): string {
   const now = new Date();
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: '#E3B261',
+    backgroundColor: nightPalette.accentLantern,
   },
   actionLabel: {
     fontSize: 14,

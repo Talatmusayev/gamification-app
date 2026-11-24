@@ -1,6 +1,7 @@
 import { Moon, Sunrise, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { MIN_VALID_REST_MIN } from '@/domain/lantern';
 import type { LanternSession } from '@/domain/types';
@@ -75,6 +76,7 @@ export function GoodnightLanternModal({
   onFinishLantern,
   onClose,
 }: GoodnightLanternModalProps) {
+  const reducedMotion = useReducedMotion();
   const [nowMs, setNowMs] = useState(() => Date.now());
 
   useEffect(() => {
@@ -100,7 +102,7 @@ export function GoodnightLanternModal({
     <Modal
       visible={visible}
       transparent
-      animationType="fade"
+      animationType={reducedMotion ? 'none' : 'fade'}
       onRequestClose={onClose}
     >
       <View style={styles.backdrop}>

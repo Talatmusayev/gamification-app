@@ -1,6 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { Droplets, Footprints, Moon, Sparkles, Sun } from 'lucide-react-native';
 import { Modal, Platform, StyleSheet, Text, View } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 import { BotanicalButton } from '@/components/ui/BotanicalButton';
 import type { MorningRevealResult } from '@/domain/types';
 import { palette, radii, spacing } from '@/theme/tokens';
@@ -26,12 +27,14 @@ export function MorningRevealModal({
   reveal,
   onClearMist,
 }: MorningRevealModalProps) {
+  const reducedMotion = useReducedMotion();
+
   if (!visible || !reveal) {
     return null;
   }
 
   const handleClearMist = () => {
-    if (Platform.OS !== 'web') {
+    if (!reveal.alreadyRevealed && Platform.OS !== 'web') {
       void Haptics.notificationAsync(
         Haptics.NotificationFeedbackType.Success,
       ).catch(() => {});
@@ -56,7 +59,7 @@ export function MorningRevealModal({
     <Modal
       visible={visible}
       transparent
-      animationType="fade"
+      animationType={reducedMotion ? 'none' : 'fade'}
       onRequestClose={handleClearMist}
     >
       <View style={styles.backdrop}>
@@ -116,6 +119,7 @@ export function MorningRevealModal({
             label={ctaLabel}
             onPress={handleClearMist}
             fullWidth
+            haptic={false}
             accessibilityLabel={ctaLabel}
             accessibilityHint="Return to the sunlit meadow"
           />

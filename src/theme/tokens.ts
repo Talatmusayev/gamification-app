@@ -9,7 +9,7 @@ export const palette = {
   accentMoss: '#365E44',
   accentMossText: '#FFFFFF',
   accentDew: '#376675',
-  accentSunlight: '#A86D24',
+  accentSunlight: '#98601A',
   danger: '#B6423A',
 } as const;
 
@@ -20,7 +20,7 @@ export const nightPalette = {
   border: 'rgba(245, 242, 235, 0.10)',
   textPrimary: '#F4F1EA',
   textSecondary: '#B9C0B7',
-  textMuted: '#889286',
+  textMuted: '#929C90',
   accentLantern: '#E3B261',
 } as const;
 
