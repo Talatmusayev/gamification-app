@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import { ShaderAtmosphere } from '@/components/garden/ShaderAtmosphere';
 import { MIN_VALID_REST_MIN } from '@/domain/lantern';
 import type { LanternSession } from '@/domain/types';
 import { fonts, nightPalette, radii, spacing } from '@/theme/tokens';
@@ -106,6 +107,7 @@ export function GoodnightLanternModal({
       onRequestClose={onClose}
     >
       <View style={styles.backdrop}>
+        <ShaderAtmosphere variant="lantern" />
         <View style={styles.sheet} accessibilityViewIsModal>
           <View style={styles.topBar}>
             <View style={styles.statusRow}>
@@ -219,7 +221,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   sheet: {
-    backgroundColor: nightPalette.bg,
+    backgroundColor: 'rgba(20, 25, 22, 0.88)',
     borderRadius: radii.xl,
     padding: spacing.xl,
     borderWidth: 1,

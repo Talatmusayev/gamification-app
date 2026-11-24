@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ShaderAtmosphere } from '@/components/garden/ShaderAtmosphere';
 import { BotanicalButton } from '@/components/ui/BotanicalButton';
+import { LiquidDewEmblem } from '@/components/ui/LiquidDewEmblem';
 import { trackEvent } from '@/services/analyticsService';
 import {
   getOfferings,
@@ -153,6 +155,7 @@ export default function PaywallScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <ShaderAtmosphere variant="pro" style={styles.headerAtmosphere} />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -176,9 +179,12 @@ export default function PaywallScreen() {
           style={styles.content}
         >
           <View style={styles.header}>
-            <View style={styles.eyebrowPill}>
-              <Sparkles size={14} strokeWidth={1.5} color={palette.accentMoss} />
-              <Text style={styles.eyebrowText}>Dew & Bloom Pro</Text>
+            <View style={styles.heroEmblemRow}>
+              <LiquidDewEmblem size={56} />
+              <View style={styles.eyebrowPill}>
+                <Sparkles size={14} strokeWidth={1.5} color={palette.accentMoss} />
+                <Text style={styles.eyebrowText}>Dew & Bloom Pro</Text>
+              </View>
             </View>
             <Text style={styles.title}>Grow a deeper sanctuary</Text>
             <Text style={styles.subtitle}>
@@ -295,6 +301,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: palette.bg,
   },
+  headerAtmosphere: {
+    height: 280,
+    bottom: undefined,
+  },
   scrollContent: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.xxl,
@@ -320,6 +330,11 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: spacing.sm,
+  },
+  heroEmblemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
   },
   eyebrowPill: {
     alignSelf: 'flex-start',

@@ -15,8 +15,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import {
   MeadowButterfly,
+  PondCaustics,
   SatelliteIslet,
   TileTapRipple,
+  VolumetricFogLayer,
   WaterfallMist,
 } from '@/components/garden/GardenAmbientLife';
 import {
@@ -31,7 +33,7 @@ import { GRID_SIZE, gridToScreen } from '@/domain/grid';
 import { getGrowthScale, getGrowthStage } from '@/domain/growth';
 import type { FogLevel, GardenPlacement } from '@/domain/types';
 import { liquidGlassSurface } from '@/theme/glass';
-import { motion, palette, radii, spacing, springs } from '@/theme/tokens';
+import { palette, radii, spacing, springs } from '@/theme/tokens';
 import { hapticLight } from '@/utils/haptics';
 
 const TILE_WIDTH = 72;
@@ -48,12 +50,17 @@ const MAX_SCALE = 2.15;
 const SOFT_PAN_BOUND = 230;
 const RUBBER_BAND_SIZE = 88;
 
-const FOG_OPACITY_BY_LEVEL: Record<FogLevel, number> = {
-  0: 0,
-  1: 0.18,
-  2: 0.42,
-  3: 0.65,
-};
+// Exact lotus pond water-surface center (mirrors GardenIslandSvg.tsx pondCx / pondCy + 1)
+const POND_HALF_W = TILE_WIDTH / 2;
+const POND_HALF_H = TILE_HEIGHT / 2;
+const POND_O_RIGHT_X = ORIGIN_X + GRID_SIZE * POND_HALF_W + 28;
+const POND_O_RIGHT_Y = ORIGIN_Y + (GRID_SIZE - 1) * POND_HALF_H;
+const POND_O_BOTTOM_X = ORIGIN_X;
+const POND_O_BOTTOM_Y = ORIGIN_Y + (GRID_SIZE * 2 - 1) * POND_HALF_H + 15;
+const POND_WF_LIP_X = POND_O_RIGHT_X + (POND_O_BOTTOM_X - POND_O_RIGHT_X) * 0.36;
+const POND_WF_LIP_Y = POND_O_RIGHT_Y + (POND_O_BOTTOM_Y - POND_O_RIGHT_Y) * 0.36;
+const POND_CX = POND_WF_LIP_X - 42;
+const POND_CY = POND_WF_LIP_Y - 26 + 1;
 
 export interface IsometricCanvasProps {
   placements: GardenPlacement[];
@@ -552,8 +559,6 @@ export function IsometricCanvas({
   const savedScale = useSharedValue(DEFAULT_SCALE);
   const islandFloatY = useSharedValue(0);
 
-  const fogOpacity = useSharedValue(FOG_OPACITY_BY_LEVEL[fogLevel]);
-
   useEffect(() => {
     return () => {
       if (rippleTimerRef.current) {
@@ -577,17 +582,6 @@ export function IsometricCanvas({
       false,
     );
   }, [islandFloatY, reducedMotion]);
-
-  useEffect(() => {
-    const targetOpacity = FOG_OPACITY_BY_LEVEL[fogLevel];
-    if (reducedMotion) {
-      fogOpacity.value = targetOpacity;
-    } else {
-      fogOpacity.value = withTiming(targetOpacity, {
-        duration: motion.enterMs * 2,
-      });
-    }
-  }, [fogLevel, fogOpacity, reducedMotion]);
 
   const handleZoomBy = (delta: number) => {
     hapticLight();
@@ -689,17 +683,29 @@ export function IsometricCanvas({
     savedScale,
   ]);
 
-  const boardAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value + islandFloatY.value },
-      { scale: scale.value },
-    ],
-  }));
-
-  const fogAnimatedStyle = useAnimatedStyle(() => ({
-    opacity: fogOpacity.value,
-  }));
+  const boardAnimatedStyle = useAnimatedStyle(() => {
+    if (reducedMotion) {
+      return {
+        transform: [
+          { translateX: translateX.value },
+          { translateY: translateY.value + islandFloatY.value },
+          { scale: scale.value },
+        ],
+      };
+    }
+    const rotateYDeg = -(translateX.value / SOFT_PAN_BOUND) * 4.5;
+    const rotateXDeg = (translateY.value / SOFT_PAN_BOUND) * 3.5;
+    return {
+      transform: [
+        { perspective: 900 },
+        { translateX: translateX.value },
+        { translateY: translateY.value + islandFloatY.value },
+        { rotateX: `${rotateXDeg}deg` },
+        { rotateY: `${rotateYDeg}deg` },
+        { scale: scale.value },
+      ],
+    };
+  });
 
   const placementByCoord = useMemo(() => {
     const map = new Map<string, GardenPlacement>();
@@ -786,6 +792,13 @@ export function IsometricCanvas({
             movingPlacementId={movingPlacementId}
             isNight={atmosphere.isNight}
             isDusk={atmosphere.isDusk}
+          />
+
+          {/* Animated concentric water caustics over the sanctuary lotus pond */}
+          <PondCaustics
+            left={POND_CX}
+            top={POND_CY}
+            reducedMotion={Boolean(reducedMotion)}
           />
 
           {/* Animated waterfall mist puffs at the right cliff waterfall base */}
@@ -1001,10 +1014,10 @@ export function IsometricCanvas({
         </Pressable>
       </View>
 
-      {/* Compassionate Morning Fog Veil */}
-      <Animated.View
-        pointerEvents="none"
-        style={[styles.fogOverlay, fogAnimatedStyle]}
+      {/* Compassionate Volumetric Morning Fog Veil */}
+      <VolumetricFogLayer
+        fogLevel={fogLevel}
+        reducedMotion={Boolean(reducedMotion)}
       />
     </View>
   );
@@ -1111,13 +1124,5 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: palette.border,
     marginHorizontal: 8,
-  },
-  fogOverlay: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    backgroundColor: '#F3F0E8',
   },
 });

@@ -32,6 +32,7 @@ import {
   BotanicalIllustration,
   type BotanicalIllustrationVariant,
 } from '@/components/ui/BotanicalIllustration';
+import { LiquidDewEmblem } from '@/components/ui/LiquidDewEmblem';
 import { SUNLIT_MEADOW_CATALOG } from '@/domain/catalog';
 import type { CatalogItem, TrackingMode } from '@/domain/types';
 import { trackEvent } from '@/services/analyticsService';
@@ -220,6 +221,10 @@ export default function OnboardingScreen() {
         >
           {step === 1 && (
             <View style={styles.welcomeContainer}>
+              <View style={styles.emblemWrap}>
+                <LiquidDewEmblem size={68} />
+              </View>
+
               <View style={styles.illustrationFrame}>
                 <BotanicalIllustration variant="welcome_sanctuary" size={248} />
               </View>
@@ -692,6 +697,10 @@ const styles = StyleSheet.create({
   },
   welcomeContainer: {
     gap: spacing.xl,
+  },
+  emblemWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   illustrationFrame: {
     alignItems: 'center',

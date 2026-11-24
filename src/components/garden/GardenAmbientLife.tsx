@@ -9,7 +9,17 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Circle, Ellipse, G, Path, Polygon } from 'react-native-svg';
+import Svg, {
+  Circle,
+  Defs,
+  Ellipse,
+  G,
+  Path,
+  Polygon,
+  RadialGradient,
+  Stop,
+} from 'react-native-svg';
+import type { FogLevel } from '@/domain/types';
 
 export interface SatelliteIsletProps {
   left: number;
@@ -329,9 +339,341 @@ export function TileTapRipple({ x, y, reducedMotion }: TileTapRippleProps) {
   );
 }
 
+export interface PondCausticsProps {
+  left: number;
+  top: number;
+  reducedMotion: boolean;
+}
+
+const POND_CAUSTIC_WIDTH = 72;
+const POND_CAUSTIC_HEIGHT = 32;
+
+export function PondCaustics({
+  left,
+  top,
+  reducedMotion,
+}: PondCausticsProps) {
+  const pulseA = useSharedValue(0);
+  const pulseB = useSharedValue(0);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      pulseA.value = 0.35;
+      pulseB.value = 0.68;
+      return;
+    }
+    pulseA.value = 0;
+    pulseB.value = 0;
+    pulseA.value = withRepeat(
+      withTiming(1, { duration: 2600, easing: Easing.out(Easing.quad) }),
+      -1,
+      false,
+    );
+    pulseB.value = withDelay(
+      1300,
+      withRepeat(
+        withTiming(1, { duration: 2600, easing: Easing.out(Easing.quad) }),
+        -1,
+        false,
+      ),
+    );
+  }, [pulseA, pulseB, reducedMotion]);
+
+  const rippleAStyle = useAnimatedStyle(() => {
+    const p = pulseA.value;
+    const opacity =
+      p < 0.15 ? (p / 0.15) * 0.62 : (1 - (p - 0.15) / 0.85) * 0.62;
+    return {
+      opacity,
+      transform: [{ scale: 0.26 + p * 0.74 }],
+    };
+  });
+
+  const rippleBStyle = useAnimatedStyle(() => {
+    const p = pulseB.value;
+    const opacity =
+      p < 0.15 ? (p / 0.15) * 0.52 : (1 - (p - 0.15) / 0.85) * 0.52;
+    return {
+      opacity,
+      transform: [{ scale: 0.26 + p * 0.74 }],
+    };
+  });
+
+  return (
+    <View
+      pointerEvents="none"
+      style={[
+        styles.pondCausticsAnchor,
+        {
+          left: left - POND_CAUSTIC_WIDTH / 2,
+          top: top - POND_CAUSTIC_HEIGHT / 2,
+        },
+      ]}
+    >
+      <Animated.View style={[styles.causticRingLayer, rippleAStyle]}>
+        <Svg
+          width={POND_CAUSTIC_WIDTH}
+          height={POND_CAUSTIC_HEIGHT}
+          viewBox={`0 0 ${POND_CAUSTIC_WIDTH} ${POND_CAUSTIC_HEIGHT}`}
+        >
+          <Ellipse
+            cx={POND_CAUSTIC_WIDTH / 2}
+            cy={POND_CAUSTIC_HEIGHT / 2}
+            rx={32}
+            ry={13.5}
+            fill="none"
+            stroke="rgba(242, 253, 255, 0.88)"
+            strokeWidth={1.35}
+          />
+        </Svg>
+      </Animated.View>
+      <Animated.View style={[styles.causticRingLayer, rippleBStyle]}>
+        <Svg
+          width={POND_CAUSTIC_WIDTH}
+          height={POND_CAUSTIC_HEIGHT}
+          viewBox={`0 0 ${POND_CAUSTIC_WIDTH} ${POND_CAUSTIC_HEIGHT}`}
+        >
+          <Ellipse
+            cx={POND_CAUSTIC_WIDTH / 2}
+            cy={POND_CAUSTIC_HEIGHT / 2}
+            rx={32}
+            ry={13.5}
+            fill="none"
+            stroke="rgba(175, 232, 242, 0.82)"
+            strokeWidth={1.15}
+          />
+        </Svg>
+      </Animated.View>
+    </View>
+  );
+}
+
+const VOLUMETRIC_FOG_OPACITY: Record<FogLevel, number> = {
+  0: 0,
+  1: 0.22,
+  2: 0.48,
+  3: 0.72,
+};
+
+interface FogWispSpec {
+  id: string;
+  topPct: `${number}%`;
+  leftPct: `${number}%`;
+  width: number;
+  height: number;
+  driftRange: number;
+  durationMs: number;
+  delayMs: number;
+  wispOpacity: number;
+}
+
+const FOG_WISPS: readonly FogWispSpec[] = [
+  {
+    id: 'mist_upper',
+    topPct: '14%',
+    leftPct: '-16%',
+    width: 340,
+    height: 120,
+    driftRange: 54,
+    durationMs: 14000,
+    delayMs: 0,
+    wispOpacity: 0.72,
+  },
+  {
+    id: 'mist_mid_left',
+    topPct: '36%',
+    leftPct: '18%',
+    width: 380,
+    height: 136,
+    driftRange: -62,
+    durationMs: 17000,
+    delayMs: 900,
+    wispOpacity: 0.82,
+  },
+  {
+    id: 'mist_mid_right',
+    topPct: '56%',
+    leftPct: '-10%',
+    width: 360,
+    height: 128,
+    driftRange: 48,
+    durationMs: 15500,
+    delayMs: 1800,
+    wispOpacity: 0.76,
+  },
+  {
+    id: 'mist_low',
+    topPct: '74%',
+    leftPct: '12%',
+    width: 390,
+    height: 132,
+    driftRange: -46,
+    durationMs: 18500,
+    delayMs: 600,
+    wispOpacity: 0.68,
+  },
+];
+
+function FogMistWisp({
+  spec,
+  active,
+  reducedMotion,
+}: {
+  spec: FogWispSpec;
+  active: boolean;
+  reducedMotion: boolean;
+}) {
+  const driftX = useSharedValue(0);
+
+  useEffect(() => {
+    if (!active || reducedMotion) {
+      driftX.value = 0;
+      return;
+    }
+    driftX.value = withDelay(
+      spec.delayMs,
+      withRepeat(
+        withSequence(
+          withTiming(spec.driftRange, {
+            duration: spec.durationMs,
+            easing: Easing.inOut(Easing.sin),
+          }),
+          withTiming(-spec.driftRange * 0.6, {
+            duration: spec.durationMs,
+            easing: Easing.inOut(Easing.sin),
+          }),
+          withTiming(0, {
+            duration: Math.round(spec.durationMs * 0.8),
+            easing: Easing.inOut(Easing.sin),
+          }),
+        ),
+        -1,
+        false,
+      ),
+    );
+  }, [active, driftX, reducedMotion, spec.delayMs, spec.driftRange, spec.durationMs]);
+
+  const wispStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: driftX.value }],
+  }));
+
+  const gradId = `fogWispGrad_${spec.id}`;
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.absolute,
+        {
+          top: spec.topPct,
+          left: spec.leftPct,
+          opacity: spec.wispOpacity,
+        },
+        wispStyle,
+      ]}
+    >
+      <Svg
+        width={spec.width}
+        height={spec.height}
+        viewBox="0 0 360 120"
+      >
+        <Defs>
+          <RadialGradient id={gradId} cx="50%" cy="50%" r="50%">
+            <Stop offset="0%" stopColor="#FAF8F2" stopOpacity={0.92} />
+            <Stop offset="55%" stopColor="#F2EFE6" stopOpacity={0.58} />
+            <Stop offset="100%" stopColor="#ECEAE0" stopOpacity={0} />
+          </RadialGradient>
+        </Defs>
+        <Ellipse cx={118} cy={66} rx={104} ry={40} fill={`url(#${gradId})`} />
+        <Ellipse cx={208} cy={52} rx={116} ry={44} fill={`url(#${gradId})`} />
+        <Ellipse cx={264} cy={70} rx={88} ry={34} fill={`url(#${gradId})`} />
+      </Svg>
+    </Animated.View>
+  );
+}
+
+export interface VolumetricFogLayerProps {
+  fogLevel: FogLevel;
+  reducedMotion: boolean;
+}
+
+export function VolumetricFogLayer({
+  fogLevel,
+  reducedMotion,
+}: VolumetricFogLayerProps) {
+  const layerOpacity = useSharedValue(VOLUMETRIC_FOG_OPACITY[fogLevel]);
+
+  useEffect(() => {
+    const target = VOLUMETRIC_FOG_OPACITY[fogLevel];
+    if (reducedMotion) {
+      layerOpacity.value = target;
+    } else {
+      layerOpacity.value = withTiming(target, {
+        duration: 520,
+        easing: Easing.inOut(Easing.quad),
+      });
+    }
+  }, [fogLevel, layerOpacity, reducedMotion]);
+
+  const containerStyle = useAnimatedStyle(() => ({
+    opacity: layerOpacity.value,
+  }));
+
+  const isActive = fogLevel > 0;
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[styles.volumetricFogContainer, containerStyle]}
+    >
+      {isActive ? (
+        <>
+          <View style={styles.volumetricFogTint} />
+          {FOG_WISPS.map((wisp) => (
+            <FogMistWisp
+              key={wisp.id}
+              spec={wisp}
+              active={isActive}
+              reducedMotion={reducedMotion}
+            />
+          ))}
+        </>
+      ) : null}
+    </Animated.View>
+  );
+}
+
 const styles = StyleSheet.create({
   absolute: {
     position: 'absolute',
+  },
+  pondCausticsAnchor: {
+    position: 'absolute',
+    width: POND_CAUSTIC_WIDTH,
+    height: POND_CAUSTIC_HEIGHT,
+  },
+  causticRingLayer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: POND_CAUSTIC_WIDTH,
+    height: POND_CAUSTIC_HEIGHT,
+  },
+  volumetricFogContainer: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    overflow: 'hidden',
+  },
+  volumetricFogTint: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    backgroundColor: 'rgba(243, 240, 232, 0.56)',
   },
   mistPuff: {
     position: 'absolute',
