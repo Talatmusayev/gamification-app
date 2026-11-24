@@ -2,7 +2,7 @@ export type TrackingMode = 'health_sync' | 'phone_only' | 'apple_health' | 'heal
 
 export type FogLevel = 0 | 1 | 2 | 3;
 
-export type ItemCategory = 'flora' | 'decor' | 'lantern' | 'companion' | 'terrain';
+export type ItemCategory = 'plant' | 'decor' | 'critter';
 
 export interface UserProfile {
   sleepGoalMin: number;
@@ -32,8 +32,9 @@ export interface CatalogItem {
   category: ItemCategory;
   dewCost: number;
   sunlightCost: number;
+  isPro: boolean;
+  assetKey: string;
   description: string;
-  isProOnly?: boolean;
 }
 
 export interface GardenPlacement {
