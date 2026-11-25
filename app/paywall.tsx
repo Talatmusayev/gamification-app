@@ -1,7 +1,14 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Bell, Check, Sparkles, X } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Linking,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ShaderAtmosphere } from '@/components/garden/ShaderAtmosphere';
@@ -41,6 +48,9 @@ export default function PaywallScreen() {
   const reducedMotion = useReducedMotion();
 
   const isPro = useSanctuaryStore((s) => s.profile.isPro);
+  const sanctuaryName = useSanctuaryStore(
+    (s) => s.profile.sanctuaryName?.trim() || 'your sanctuary',
+  );
   const guestPassEndsAt = useSanctuaryStore((s) => s.profile.guestPassEndsAt);
   const guestPassUsed = useSanctuaryStore((s) => s.profile.guestPassUsed);
   const trialReminderOptIn = useSanctuaryStore(
@@ -306,7 +316,9 @@ export default function PaywallScreen() {
             </View>
 
             <Text style={styles.title}>
-              Grow a calmer sleep &amp; walk ritual in 60 seconds a morning
+              {sanctuaryName === 'your sanctuary'
+                ? 'Grow a calmer sleep & walk ritual in 60 seconds a morning'
+                : `Grow ${sanctuaryName} in 60 seconds a morning`}
             </Text>
             <Text style={styles.subtitle}>
               {isPro
@@ -519,6 +531,39 @@ export default function PaywallScreen() {
               {restoring ? 'Checking purchases...' : 'Restore purchases'}
             </Text>
           </Pressable>
+
+          <View style={styles.legalBlock}>
+            <Text style={styles.legalDisclosure}>
+              Payment is charged to your App Store or Google Play account upon
+              confirmation. Annual and monthly plans renew automatically unless
+              canceled at least 24 hours before the current period ends.
+            </Text>
+            <View style={styles.legalLinksRow}>
+              <Pressable
+                onPress={() => {
+                  void Linking.openURL('https://dewy.app/privacy.html');
+                }}
+                hitSlop={8}
+                accessibilityRole="link"
+                accessibilityLabel="Privacy Policy"
+                style={styles.legalLinkBtn}
+              >
+                <Text style={styles.legalLinkText}>Privacy Policy</Text>
+              </Pressable>
+              <Text style={styles.legalDivider}>·</Text>
+              <Pressable
+                onPress={() => {
+                  void Linking.openURL('https://dewy.app/terms.html');
+                }}
+                hitSlop={8}
+                accessibilityRole="link"
+                accessibilityLabel="Terms of Use"
+                style={styles.legalLinkBtn}
+              >
+                <Text style={styles.legalLinkText}>Terms of Use</Text>
+              </Pressable>
+            </View>
+          </View>
         </Animated.View>
       </ScrollView>
     </SafeAreaView>
@@ -880,6 +925,40 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodyMedium,
     fontSize: 13,
     lineHeight: 18,
+    color: palette.textMuted,
+  },
+  legalBlock: {
+    gap: spacing.xs,
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+  },
+  legalDisclosure: {
+    fontFamily: fonts.body,
+    fontSize: 11,
+    lineHeight: 16,
+    color: palette.textMuted,
+    textAlign: 'center',
+  },
+  legalLinksRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+  },
+  legalLinkBtn: {
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xs,
+  },
+  legalLinkText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12,
+    color: palette.textSecondary,
+    textDecorationLine: 'underline',
+  },
+  legalDivider: {
+    fontFamily: fonts.body,
+    fontSize: 12,
     color: palette.textMuted,
   },
 });

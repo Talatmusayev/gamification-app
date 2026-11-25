@@ -33,10 +33,12 @@ const STARTER_SUNLIGHT_POUCH = 60;
 const DEFAULT_BEDTIME_DEW = 10;
 
 export interface CompleteOnboardingInput {
+  sanctuaryName?: string;
   sleepGoalMin: number;
   stepGoal: number;
   starterItemId: string;
   trackingMode: TrackingMode;
+  starterWatered?: boolean;
 }
 
 export interface TriggerMorningRevealInput {
@@ -191,8 +193,24 @@ export const useSanctuaryStore = create<SanctuaryStore>()(
           }
         }
 
+        if (
+          input.starterWatered &&
+          placements.length > 0 &&
+          starterItem?.category === 'plant'
+        ) {
+          placements = placements.map((placement, index) =>
+            index === 0 ? { ...placement, growthStage: 2 } : placement,
+          );
+        }
+
+        const sanitizedName = input.sanctuaryName?.trim();
+
         set({
           profile: {
+            sanctuaryName:
+              sanitizedName && sanitizedName.length > 0
+                ? sanitizedName
+                : 'Sunlit Meadow',
             sleepGoalMin: input.sleepGoalMin,
             stepGoal: input.stepGoal,
             trackingMode: input.trackingMode,

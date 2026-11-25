@@ -5,6 +5,7 @@ export type FogLevel = 0 | 1 | 2 | 3;
 export type ItemCategory = 'plant' | 'decor' | 'critter';
 
 export interface UserProfile {
+  sanctuaryName?: string;
   sleepGoalMin: number;
   stepGoal: number;
   bedtimeTargetMin?: number;

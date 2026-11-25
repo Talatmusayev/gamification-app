@@ -13,6 +13,7 @@ export function Footer() {
           <div className="footer-links">
             <a href="#early-access">Early access</a>
             <a href="/privacy.html">Privacy Policy</a>
+            <a href="/terms.html">Terms of Use</a>
             <a href="/app-ads.txt">app-ads.txt</a>
           </div>
 

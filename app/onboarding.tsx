@@ -11,6 +11,8 @@ import {
   Minus,
   Moon,
   Plus,
+  ShieldCheck,
+  Sparkles,
   Sun,
 } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
@@ -20,11 +22,18 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import Animated, {
+  Easing,
   FadeInDown,
+  useAnimatedStyle,
   useReducedMotion,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BotanicalButton } from '@/components/ui/BotanicalButton';
@@ -32,13 +41,19 @@ import {
   BotanicalIllustration,
   type BotanicalIllustrationVariant,
 } from '@/components/ui/BotanicalIllustration';
+import { GardenSprite } from '@/components/ui/GardenSprite';
 import { LiquidDewEmblem } from '@/components/ui/LiquidDewEmblem';
+import { SanctuaryCompanion } from '@/components/ui/SanctuaryCompanion';
 import { SUNLIT_MEADOW_CATALOG } from '@/domain/catalog';
+import {
+  calculateDewReward,
+  calculateSunlightReward,
+} from '@/domain/economy';
 import type { CatalogItem, TrackingMode } from '@/domain/types';
 import { trackEvent } from '@/services/analyticsService';
 import { requestHealthPermissions } from '@/services/healthService';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
-import { fonts, palette, radii, spacing } from '@/theme/tokens';
+import { fonts, palette, radii, spacing, springs } from '@/theme/tokens';
 
 const TOTAL_STEPS = 4;
 
@@ -54,6 +69,13 @@ const DEFAULT_STEP_GOAL = 6000;
 
 const STARTER_IDS = ['lavender', 'bonsai_sprout', 'sunlit_fern'] as const;
 type StarterId = (typeof STARTER_IDS)[number];
+
+const SANCTUARY_PRESETS = [
+  'Sunlit Meadow',
+  'Moss Hollow',
+  'Morning Glade',
+  'Cedar Nook',
+] as const;
 
 function triggerLightHaptic() {
   if (Platform.OS !== 'web') {
@@ -76,11 +98,18 @@ export default function OnboardingScreen() {
   const completeOnboarding = useSanctuaryStore((s) => s.completeOnboarding);
 
   const [step, setStep] = useState<number>(1);
+  const [sanctuaryName, setSanctuaryName] = useState<string>('Sunlit Meadow');
   const [sleepGoalMin, setSleepGoalMin] = useState<number>(DEFAULT_SLEEP_MIN);
   const [stepGoal, setStepGoal] = useState<number>(DEFAULT_STEP_GOAL);
   const [starterItemId, setStarterItemId] = useState<StarterId>('lavender');
+  const [starterWatered, setStarterWatered] = useState<boolean>(false);
+  const [pipHopCount, setPipHopCount] = useState<number>(0);
   const [trackingMode, setTrackingMode] = useState<TrackingMode>('phone_only');
   const [submitting, setSubmitting] = useState(false);
+
+  const sproutScale = useSharedValue(1);
+  const dropRingOpacity = useSharedValue(0);
+  const dropRingScale = useSharedValue(0.7);
 
   useEffect(() => {
     trackEvent('onboarding_started');
@@ -92,6 +121,21 @@ export default function OnboardingScreen() {
     ).filter((item): item is CatalogItem => Boolean(item));
   }, []);
 
+  const selectedStarter = useMemo(
+    () =>
+      starterItems.find((item) => item.id === starterItemId) ?? starterItems[0],
+    [starterItemId, starterItems],
+  );
+
+  const projectedDew = useMemo(
+    () => calculateDewReward(sleepGoalMin, sleepGoalMin, 0),
+    [sleepGoalMin],
+  );
+  const projectedSunlight = useMemo(
+    () => calculateSunlightReward(stepGoal, stepGoal),
+    [stepGoal],
+  );
+
   const handleBack = () => {
     if (step <= 1 || submitting) {
       return;
@@ -102,6 +146,7 @@ export default function OnboardingScreen() {
 
   const handleNext = async () => {
     if (step < TOTAL_STEPS) {
+      triggerLightHaptic();
       setStep((prev) => prev + 1);
       return;
     }
@@ -125,10 +170,12 @@ export default function OnboardingScreen() {
       }
 
       completeOnboarding({
+        sanctuaryName: sanctuaryName.trim() || 'Sunlit Meadow',
         sleepGoalMin,
         stepGoal,
         starterItemId,
         trackingMode: resolvedTrackingMode,
+        starterWatered,
       });
       trackEvent('onboarding_completed', {
         tracking_mode: resolvedTrackingMode,
@@ -165,6 +212,33 @@ export default function OnboardingScreen() {
     if (id !== starterItemId) {
       triggerLightHaptic();
       setStarterItemId(id);
+      setStarterWatered(false);
+    }
+  };
+
+  const handleWaterStarterPreview = () => {
+    triggerLightHaptic();
+    if (Platform.OS !== 'web') {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    }
+    setStarterWatered(true);
+    setPipHopCount((prev) => prev + 1);
+
+    if (!reducedMotion) {
+      sproutScale.value = withSequence(
+        withTiming(1.16, { duration: 150, easing: Easing.out(Easing.quad) }),
+        withSpring(1, springs.pop),
+      );
+      dropRingScale.value = 0.72;
+      dropRingOpacity.value = 0.85;
+      dropRingScale.value = withTiming(1.45, {
+        duration: 540,
+        easing: Easing.out(Easing.cubic),
+      });
+      dropRingOpacity.value = withTiming(0, {
+        duration: 540,
+        easing: Easing.out(Easing.cubic),
+      });
     }
   };
 
@@ -175,13 +249,24 @@ export default function OnboardingScreen() {
     }
   };
 
+  const sproutAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: sproutScale.value }],
+  }));
+
+  const dropRingAnimStyle = useAnimatedStyle(() => ({
+    opacity: dropRingOpacity.value,
+    transform: [{ scale: dropRingScale.value }],
+  }));
+
   const enteringAnim = reducedMotion ? undefined : FadeInDown.duration(240);
 
   const ctaLabel =
     step === 1
       ? 'Begin your sanctuary'
       : step === TOTAL_STEPS
-        ? 'Plant my sanctuary'
+        ? trackingMode === 'health_sync'
+          ? 'Allow health access & continue'
+          : 'Plant & enter meadow'
         : 'Continue';
 
   return (
@@ -241,6 +326,7 @@ export default function OnboardingScreen() {
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         bounces={false}
       >
         <Animated.View
@@ -268,6 +354,61 @@ export default function OnboardingScreen() {
                   sunlight. No punishing streaks, just a quiet meadow that
                   blooms at your own pace.
                 </Text>
+              </View>
+
+              <View style={styles.pipGreetingCard}>
+                <SanctuaryCompanion size={50} />
+                <View style={styles.pipGreetingCopy}>
+                  <Text style={styles.pipGreetingTitle}>
+                    Pip is waiting in {sanctuaryName.trim() || 'Sunlit Meadow'}
+                  </Text>
+                  <Text style={styles.pipGreetingText}>
+                    A quiet clearing kept by your pocket garden sprite. Nothing here resets to zero.
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.namingCard}>
+                <Text style={styles.namingLabel}>Name your sanctuary</Text>
+                <TextInput
+                  value={sanctuaryName}
+                  onChangeText={setSanctuaryName}
+                  placeholder="Sunlit Meadow"
+                  placeholderTextColor={palette.textMuted}
+                  maxLength={28}
+                  accessibilityLabel="Sanctuary name"
+                  style={styles.namingInput}
+                />
+                <View style={styles.presetRow}>
+                  {SANCTUARY_PRESETS.map((preset) => {
+                    const active = sanctuaryName.trim() === preset;
+                    return (
+                      <Pressable
+                        key={preset}
+                        onPress={() => {
+                          triggerLightHaptic();
+                          setSanctuaryName(preset);
+                        }}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected: active }}
+                        style={({ pressed }) => [
+                          styles.presetChip,
+                          active && styles.presetChipActive,
+                          pressed && styles.pressedSoft,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.presetChipText,
+                            active && styles.presetChipTextActive,
+                          ]}
+                        >
+                          {preset}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
               </View>
 
               <View style={styles.resourceList}>
@@ -455,6 +596,24 @@ export default function OnboardingScreen() {
                   </Pressable>
                 </View>
               </View>
+
+              {/* Positive projected morning payout */}
+              <View style={styles.rhythmPreviewCard}>
+                <View style={styles.rhythmPreviewBadge}>
+                  <Sparkles size={14} strokeWidth={1.6} color={palette.accentMoss} />
+                  <Text style={styles.rhythmPreviewHeading}>
+                    Your morning reward preview
+                  </Text>
+                </View>
+                <Text style={styles.rhythmPreviewCopy}>
+                  At this gentle rhythm, a restful night gathers up to{' '}
+                  <Text style={styles.rhythmPreviewNum}>{projectedDew} Dew</Text> and{' '}
+                  <Text style={styles.rhythmPreviewNum}>
+                    {projectedSunlight} Sunlight
+                  </Text>{' '}
+                  for {sanctuaryName.trim() || 'your sanctuary'} — zero streak penalties if you miss a day.
+                </Text>
+              </View>
             </View>
           )}
 
@@ -514,6 +673,73 @@ export default function OnboardingScreen() {
                   );
                 })}
               </View>
+
+              {/* Interactive First Clearing Moment (Endowment + Reward before Paywall) */}
+              {selectedStarter ? (
+                <View style={styles.firstDropStage}>
+                  <View style={styles.firstDropStageTop}>
+                    <SanctuaryCompanion size={46} hopTrigger={pipHopCount} />
+                    <View style={styles.firstDropSpriteWrap}>
+                      <Animated.View
+                        pointerEvents="none"
+                        style={[styles.firstDropRing, dropRingAnimStyle]}
+                      />
+                      <Animated.View style={sproutAnimStyle}>
+                        <GardenSprite
+                          assetKey={selectedStarter.assetKey}
+                          size={72}
+                          growthStage={starterWatered ? 2 : 1}
+                        />
+                      </Animated.View>
+                    </View>
+                  </View>
+
+                  <Text style={styles.firstDropTitle}>
+                    {starterWatered
+                      ? `${selectedStarter.name} · Budding (2/3)`
+                      : `${selectedStarter.name} · Seeded (1/3)`}
+                  </Text>
+                  <Text style={styles.firstDropCaption}>
+                    {starterWatered
+                      ? 'Your first morning drop awakened a new bud. It stays bloomed inside your clearing.'
+                      : 'Tap once below to give your first welcome drop before entering the full meadow.'}
+                  </Text>
+
+                  <Pressable
+                    onPress={handleWaterStarterPreview}
+                    disabled={starterWatered}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      starterWatered
+                        ? `${selectedStarter.name} welcomed with morning dew`
+                        : `Give first morning drop to ${selectedStarter.name}`
+                    }
+                    style={({ pressed }) => [
+                      styles.firstDropButton,
+                      starterWatered && styles.firstDropButtonDone,
+                      pressed && !starterWatered && styles.pressedSoft,
+                    ]}
+                  >
+                    <Droplets
+                      size={16}
+                      strokeWidth={1.7}
+                      color={
+                        starterWatered ? palette.accentMoss : palette.accentMossText
+                      }
+                    />
+                    <Text
+                      style={[
+                        styles.firstDropButtonText,
+                        starterWatered && styles.firstDropButtonTextDone,
+                      ]}
+                    >
+                      {starterWatered
+                        ? 'First morning drop given'
+                        : 'Give first morning drop · Free gift'}
+                    </Text>
+                  </Pressable>
+                </View>
+              ) : null}
             </View>
           )}
 
@@ -630,6 +856,24 @@ export default function OnboardingScreen() {
                   </Text>
                 </Pressable>
               </View>
+
+              {trackingMode === 'health_sync' ? (
+                <View style={styles.privacyPledgeCard}>
+                  <View style={styles.privacyPledgeHeader}>
+                    <ShieldCheck
+                      size={18}
+                      strokeWidth={1.6}
+                      color={palette.accentDew}
+                    />
+                    <Text style={styles.privacyPledgeTitle}>
+                      Read-only health privacy pledge
+                    </Text>
+                  </View>
+                  <Text style={styles.privacyPledgeBody}>
+                    Dewy reads only sleep duration and daily step count. Your records stay on your device or private backup — never sold and never shared with ad networks. Declining still opens {sanctuaryName.trim() || 'your sanctuary'} with Goodnight Lantern.
+                  </Text>
+                </View>
+              ) : null}
             </View>
           )}
         </Animated.View>
@@ -967,5 +1211,203 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: palette.border,
     backgroundColor: palette.bg,
+  },
+  pipGreetingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    backgroundColor: palette.surfaceElevated,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: palette.border,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  pipGreetingCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  pipGreetingTitle: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 14,
+    color: palette.textPrimary,
+  },
+  pipGreetingText: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    lineHeight: 18,
+    color: palette.textSecondary,
+  },
+  namingCard: {
+    backgroundColor: palette.surfaceElevated,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: palette.border,
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  namingLabel: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 14,
+    color: palette.textPrimary,
+  },
+  namingInput: {
+    minHeight: 44,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surface,
+    paddingHorizontal: spacing.md,
+    fontFamily: fonts.bodyMedium,
+    fontSize: 15,
+    color: palette.textPrimary,
+  },
+  presetRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  presetChip: {
+    minHeight: 44,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.full,
+    borderWidth: 1,
+    borderColor: palette.border,
+    backgroundColor: palette.surface,
+    justifyContent: 'center',
+  },
+  presetChipActive: {
+    backgroundColor: palette.accentMoss,
+    borderColor: palette.accentMoss,
+  },
+  presetChipText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12,
+    color: palette.textSecondary,
+  },
+  presetChipTextActive: {
+    color: palette.accentMossText,
+  },
+  rhythmPreviewCard: {
+    backgroundColor: 'rgba(54, 94, 68, 0.08)',
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(54, 94, 68, 0.2)',
+    padding: spacing.lg,
+    gap: spacing.xs,
+  },
+  rhythmPreviewBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  rhythmPreviewHeading: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 13,
+    color: palette.accentMoss,
+  },
+  rhythmPreviewCopy: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    lineHeight: 19,
+    color: palette.textSecondary,
+  },
+  rhythmPreviewNum: {
+    fontFamily: fonts.bodySemiBold,
+    color: palette.textPrimary,
+    fontVariant: ['tabular-nums'],
+  },
+  firstDropStage: {
+    backgroundColor: palette.surfaceElevated,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    borderColor: palette.border,
+    padding: spacing.lg,
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  firstDropStageTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.lg,
+    paddingVertical: spacing.xs,
+  },
+  firstDropSpriteWrap: {
+    width: 84,
+    height: 84,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  firstDropRing: {
+    position: 'absolute',
+    width: 78,
+    height: 78,
+    borderRadius: 39,
+    borderWidth: 2,
+    borderColor: palette.accentDew,
+    backgroundColor: 'rgba(55, 102, 117, 0.12)',
+  },
+  firstDropTitle: {
+    fontFamily: fonts.displaySemiBold,
+    fontSize: 17,
+    color: palette.textPrimary,
+  },
+  firstDropCaption: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    lineHeight: 19,
+    color: palette.textSecondary,
+    textAlign: 'center',
+  },
+  firstDropButton: {
+    marginTop: spacing.xs,
+    minHeight: 44,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.full,
+    backgroundColor: palette.accentDew,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+  },
+  firstDropButtonDone: {
+    backgroundColor: 'rgba(54, 94, 68, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(54, 94, 68, 0.25)',
+  },
+  firstDropButtonText: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 14,
+    color: palette.accentMossText,
+  },
+  firstDropButtonTextDone: {
+    color: palette.accentMoss,
+  },
+  privacyPledgeCard: {
+    backgroundColor: 'rgba(55, 102, 117, 0.08)',
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(55, 102, 117, 0.22)',
+    padding: spacing.lg,
+    gap: spacing.xs,
+  },
+  privacyPledgeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  privacyPledgeTitle: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 14,
+    color: palette.accentDew,
+  },
+  privacyPledgeBody: {
+    fontFamily: fonts.body,
+    fontSize: 13,
+    lineHeight: 19,
+    color: palette.textSecondary,
   },
 });

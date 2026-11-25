@@ -350,4 +350,24 @@ describe('useSanctuaryStore', () => {
       'A steady bedtime brought gentle clarity to your meadow.',
     );
   });
+
+  it('persists sanctuaryName and optional first-drop budding stage without altering starter pouch', () => {
+    useSanctuaryStore.getState().completeOnboarding({
+      sanctuaryName: 'Moss Hollow',
+      sleepGoalMin: 450,
+      stepGoal: 6500,
+      starterItemId: 'lavender',
+      trackingMode: 'health_sync',
+      starterWatered: true,
+    });
+
+    const state = useSanctuaryStore.getState();
+    expect(state.profile.sanctuaryName).toBe('Moss Hollow');
+    expect(state.profile.dewBalance).toBe(60);
+    expect(state.profile.sunlightBalance).toBe(60);
+    expect(state.placements[0]).toMatchObject({
+      itemId: 'lavender',
+      growthStage: 2,
+    });
+  });
 });
