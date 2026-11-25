@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useEffect, useId, useState } from 'react';
 
 interface LiquidDewLogoProps {
   size?: number;
@@ -7,12 +7,23 @@ interface LiquidDewLogoProps {
 /**
  * Living Liquid-Dew Logo (inspired by paper-design/liquid-logo):
  * Shimmering liquid-dewdrop + botanical leaf mark with an animated specular edge highlight.
+ * Respects prefers-reduced-motion.
  */
 export function LiquidDewLogo({ size = 32 }: LiquidDewLogoProps) {
   const uid = useId().replace(/:/g, '');
   const bodyGrad = `dew-body-${uid}`;
   const sheenGrad = `dew-sheen-${uid}`;
   const rimGrad = `dew-rim-${uid}`;
+  const [reduced, setReduced] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    if (!mq) return;
+    setReduced(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener?.('change', onChange);
+    return () => mq.removeEventListener?.('change', onChange);
+  }, []);
 
   return (
     <svg
@@ -35,14 +46,16 @@ export function LiquidDewLogo({ size = 32 }: LiquidDewLogoProps) {
           <stop offset="42%" stopColor="#FFFFFF" stopOpacity="0.62" />
           <stop offset="56%" stopColor="#E3B261" stopOpacity="0.38" />
           <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
-          <animateTransform
-            attributeName="gradientTransform"
-            type="translate"
-            from="-24 -24"
-            to="24 24"
-            dur="5.5s"
-            repeatCount="indefinite"
-          />
+          {!reduced && (
+            <animateTransform
+              attributeName="gradientTransform"
+              type="translate"
+              from="-24 -24"
+              to="24 24"
+              dur="5.5s"
+              repeatCount="indefinite"
+            />
+          )}
         </linearGradient>
 
         <linearGradient id={rimGrad} x1="12" y1="6" x2="36" y2="42" gradientUnits="userSpaceOnUse">
@@ -58,7 +71,7 @@ export function LiquidDewLogo({ size = 32 }: LiquidDewLogoProps) {
         fill={`url(#${bodyGrad})`}
       />
 
-      {/* Animated liquid specular sweep */}
+      {/* Specular sweep */}
       <path
         className="liquid-dew-shimmer"
         d="M24 4.5C24 4.5 9.5 20.8 9.5 30.2C9.5 38.2 16 44 24 44C32 44 38.5 38.2 38.5 30.2C38.5 20.8 24 4.5 24 4.5Z"

@@ -4,7 +4,7 @@ import { LiquidDewLogo } from './LiquidDewLogo';
 
 const NAV_LINKS = [
   { label: 'Ritual', href: '#ritual' },
-  { label: 'Sanctuary', href: '#sanctuary' },
+  { label: 'Preview', href: '#sanctuary' },
   { label: 'Pricing', href: '#pricing' },
   { label: 'Privacy', href: '/privacy.html' },
 ];
@@ -15,9 +15,9 @@ export function LiquidGlassNav() {
   return (
     <header className="nav-shell">
       <div className="wrap">
-        <nav className="nav-bar liquid-glass" aria-label="Primary navigation">
+        <nav className="nav-bar" aria-label="Primary navigation">
           <a className="nav-brand" href="#top" aria-label="Dewy home">
-            <LiquidDewLogo size={30} />
+            <LiquidDewLogo size={28} />
             <span>Dewy</span>
           </a>
 
@@ -30,8 +30,8 @@ export function LiquidGlassNav() {
           </ul>
 
           <div className="nav-actions">
-            <a className="btn-primary" href="#download">
-              Get the app
+            <a className="btn-primary nav-cta" href="#early-access">
+              Get early access
             </a>
             <button
               type="button"
@@ -59,11 +59,11 @@ export function LiquidGlassNav() {
             ))}
             <a
               className="btn-primary"
-              href="#download"
+              href="#early-access"
               style={{ marginTop: 6 }}
               onClick={() => setMenuOpen(false)}
             >
-              Get the app
+              Get early access
             </a>
           </div>
         )}
