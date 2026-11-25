@@ -541,9 +541,7 @@ export default function PaywallScreen() {
             <View style={styles.legalLinksRow}>
               <Pressable
                 onPress={() => {
-                  void Linking.openURL(
-                    'https://web-eta-lyart-19.vercel.app/privacy',
-                  );
+                  void Linking.openURL('https://dewy-garden.vercel.app/privacy');
                 }}
                 hitSlop={8}
                 accessibilityRole="link"
@@ -555,9 +553,7 @@ export default function PaywallScreen() {
               <Text style={styles.legalDivider}>·</Text>
               <Pressable
                 onPress={() => {
-                  void Linking.openURL(
-                    'https://web-eta-lyart-19.vercel.app/terms',
-                  );
+                  void Linking.openURL('https://dewy-garden.vercel.app/terms');
                 }}
                 hitSlop={8}
                 accessibilityRole="link"
