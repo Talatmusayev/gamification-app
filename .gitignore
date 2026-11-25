@@ -46,5 +46,7 @@ yarn-error.*
 # standalone landing page
 web/node_modules/
 web/dist/
+.vercel/
+web/.vercel/
 
 .env
