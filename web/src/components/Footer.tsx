@@ -11,6 +11,7 @@ export function Footer() {
           </a>
 
           <div className="footer-links">
+            <a href="#early-access">Early access</a>
             <a href="/privacy.html">Privacy Policy</a>
             <a href="/app-ads.txt">app-ads.txt</a>
           </div>

@@ -4,21 +4,21 @@ const RITUAL_STEPS = [
   {
     step: '01 · Sleep',
     title: 'Rest gathers Morning Dew',
-    body: 'Sync passively with Apple Health or Health Connect, or tap the Goodnight Lantern before bed. A steady night fills your sanctuary with Dew to nourish new flora.',
+    body: 'Sync passively with Apple Health or Health Connect, or tap the Goodnight Lantern before bed. A steady night fills your meadow with Dew for new seedlings.',
     icon: Droplets,
     tone: 'ritual-icon-dew',
   },
   {
     step: '02 · Movement',
     title: 'Steps bring Warm Sunlight',
-    body: 'Every unhurried walk through the day collects Warm Sunlight from your phone or wearable—turning ordinary movement into bonsai trees, lanterns, and visiting critters.',
+    body: 'Every unhurried walk through the day gathers Warm Sunlight from your phone or wearable, turning ordinary steps into bonsai trees, lanterns, and critters.',
     icon: Sun,
     tone: 'ritual-icon-sun',
   },
   {
     step: '03 · Grace',
     title: 'Morning Fog, never streak-death',
-    body: 'Rough nights happen. When life gets busy, nothing wilts or resets to zero—a soft morning mist settles over your meadow and lifts naturally on your next good rest.',
+    body: 'Short nights happen. When schedules shift, nothing wilts or resets to zero. Soft morning mist settles over the island and lifts on your next good rest.',
     icon: CloudFog,
     tone: 'ritual-icon-fog',
   },
@@ -29,13 +29,13 @@ export function MorningRitualSection() {
     <section id="ritual" className="section" aria-labelledby="ritual-heading">
       <div className="wrap">
         <div className="section-header">
-          <span className="section-eyebrow">The 60-Second Morning Ritual</span>
+          <span className="section-eyebrow">The 60-second morning ritual</span>
           <h2 id="ritual-heading" className="section-title">
             Open your meadow, not your feed.
           </h2>
           <p className="section-lead">
             Once each morning, clear the mist, collect what yesterday&rsquo;s rest and steps
-            gathered, and plant one quiet detail before the day begins.
+            gathered, and plant one new detail before the day begins.
           </p>
         </div>
 
@@ -43,7 +43,7 @@ export function MorningRitualSection() {
           {RITUAL_STEPS.map(({ step, title, body, icon: Icon, tone }) => (
             <article key={title} className="ritual-col">
               <div className={`ritual-icon ${tone}`} aria-hidden="true">
-                <Icon size={21} strokeWidth={1.85} />
+                <Icon size={21} strokeWidth={1.75} />
               </div>
               <span className="ritual-step">{step}</span>
               <h3 className="ritual-heading">{title}</h3>
