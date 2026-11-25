@@ -13,7 +13,7 @@ import {
   Plus,
   Sun,
 } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Platform,
   Pressable,
@@ -36,6 +36,7 @@ import { LiquidDewEmblem } from '@/components/ui/LiquidDewEmblem';
 import { SUNLIT_MEADOW_CATALOG } from '@/domain/catalog';
 import type { CatalogItem, TrackingMode } from '@/domain/types';
 import { trackEvent } from '@/services/analyticsService';
+import { requestHealthPermissions } from '@/services/healthService';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
 import { fonts, palette, radii, spacing } from '@/theme/tokens';
 
@@ -79,6 +80,11 @@ export default function OnboardingScreen() {
   const [stepGoal, setStepGoal] = useState<number>(DEFAULT_STEP_GOAL);
   const [starterItemId, setStarterItemId] = useState<StarterId>('lavender');
   const [trackingMode, setTrackingMode] = useState<TrackingMode>('phone_only');
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    trackEvent('onboarding_started');
+  }, []);
 
   const starterItems = useMemo<CatalogItem[]>(() => {
     return STARTER_IDS.map((id) =>
@@ -87,27 +93,50 @@ export default function OnboardingScreen() {
   }, []);
 
   const handleBack = () => {
-    if (step <= 1) {
+    if (step <= 1 || submitting) {
       return;
     }
     triggerLightHaptic();
     setStep((prev) => prev - 1);
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step < TOTAL_STEPS) {
       setStep((prev) => prev + 1);
       return;
     }
 
-    completeOnboarding({
-      sleepGoalMin,
-      stepGoal,
-      starterItemId,
-      trackingMode,
-    });
-    trackEvent('onboarding_completed', { tracking_mode: trackingMode });
-    router.replace('/(tabs)/sanctuary');
+    if (submitting) {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      let resolvedTrackingMode: TrackingMode = trackingMode;
+      if (trackingMode === 'health_sync') {
+        const permission = await requestHealthPermissions();
+        trackEvent('health_permission_result', {
+          platform: permission.platform,
+          status: permission.status,
+        });
+        if (!permission.granted) {
+          resolvedTrackingMode = 'phone_only';
+        }
+      }
+
+      completeOnboarding({
+        sleepGoalMin,
+        stepGoal,
+        starterItemId,
+        trackingMode: resolvedTrackingMode,
+      });
+      trackEvent('onboarding_completed', {
+        tracking_mode: resolvedTrackingMode,
+      });
+      router.replace('/paywall?source=onboarding');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const adjustSleep = (delta: number) => {
@@ -609,8 +638,11 @@ export default function OnboardingScreen() {
       {/* Bottom anchored CTA */}
       <View style={styles.footer}>
         <BotanicalButton
-          label={ctaLabel}
-          onPress={handleNext}
+          label={submitting ? 'Setting up sanctuary...' : ctaLabel}
+          onPress={() => {
+            void handleNext();
+          }}
+          disabled={submitting}
           fullWidth
           iconRight={
             step < TOTAL_STEPS ? (

@@ -1,6 +1,8 @@
 import {
+  formatTrialTimelineCopy,
   getEntitlementStatus,
   getOfferings,
+  getRecommendedOffering,
   purchasePlan,
   resetPurchasesSandbox,
   restorePurchases,
@@ -137,5 +139,21 @@ describe('purchasesService', () => {
       activePlanId: 'lifetime_pro',
       source: 'revenuecat',
     });
+  });
+
+  it('resolves the recommended offering and builds 3-step transparent trial timeline copy', async () => {
+    const offerings = await getOfferings();
+    const recommended = getRecommendedOffering(offerings);
+    expect(recommended?.id).toBe('annual_pro');
+    expect(recommended?.savingsLabel).toBe('Save 44%');
+    expect(getRecommendedOffering([])).toBeUndefined();
+
+    const timeline = formatTrialTimelineCopy(7);
+    expect(timeline).toHaveLength(3);
+    expect(timeline[0]).toMatchObject({ id: 'today', dayLabel: 'Today' });
+    expect(timeline[1]).toMatchObject({ id: 'reminder', dayLabel: 'Day 5' });
+    expect(timeline[2]).toMatchObject({ id: 'renewal', dayLabel: 'Day 7' });
+
+    expect(formatTrialTimelineCopy(0)).toEqual([]);
   });
 });

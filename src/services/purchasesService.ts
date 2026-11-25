@@ -9,11 +9,19 @@ export interface PurchaseOffering {
   priceUsd: number;
   priceLabel: string;
   subPriceLabel?: string;
+  savingsLabel?: string;
   trialDays: number;
   trialLabel?: string;
   recommended: boolean;
   badgeLabel?: string;
   analyticsPlan: AnalyticsPlanName;
+}
+
+export interface TrialTimelineStep {
+  id: 'today' | 'reminder' | 'renewal';
+  dayLabel: string;
+  title: string;
+  description: string;
 }
 
 export interface EntitlementStatus {
@@ -48,6 +56,7 @@ const OFFERING_CATALOG: readonly PurchaseOffering[] = [
     priceUsd: 19.99,
     priceLabel: '$19.99/yr',
     subPriceLabel: '$1.66 / month',
+    savingsLabel: 'Save 44%',
     trialDays: 7,
     trialLabel: '7-day free trial',
     recommended: true,
@@ -126,6 +135,47 @@ export async function getOfferings(): Promise<PurchaseOffering[]> {
 export function getOfferingById(planId: PlanId): PurchaseOffering {
   const match = OFFERING_CATALOG.find((item) => item.id === planId);
   return match ? { ...match } : { ...OFFERING_CATALOG[0] };
+}
+
+/**
+ * Picks the recommended offering (falling back to the first offering if none flagged).
+ */
+export function getRecommendedOffering(
+  offerings: readonly PurchaseOffering[],
+): PurchaseOffering | undefined {
+  return offerings.find((item) => item.recommended) ?? offerings[0];
+}
+
+/**
+ * Builds RevenueCat-style transparent trial steps (Today, Day 5 reminder, Day 7 renewal).
+ */
+export function formatTrialTimelineCopy(trialDays: number): TrialTimelineStep[] {
+  if (!Number.isFinite(trialDays) || trialDays <= 0) {
+    return [];
+  }
+  const totalDays = Math.max(1, Math.round(trialDays));
+  const reminderDay = Math.max(1, totalDays - 2);
+
+  return [
+    {
+      id: 'today',
+      dayLabel: 'Today',
+      title: 'Full Pro access unlocked',
+      description: 'Unlock all 35+ plants, Keeper insights, and an ad-free meadow.',
+    },
+    {
+      id: 'reminder',
+      dayLabel: `Day ${reminderDay}`,
+      title: 'Optional gentle reminder',
+      description: 'Get a calm heads-up 2 days before billing if you opt in below.',
+    },
+    {
+      id: 'renewal',
+      dayLabel: `Day ${totalDays}`,
+      title: 'Annual plan starts',
+      description: 'Renews at $19.99/yr only if you stay. Cancel anytime in store settings.',
+    },
+  ];
 }
 
 /**

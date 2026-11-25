@@ -242,4 +242,112 @@ describe('useSanctuaryStore', () => {
     expect(third).toEqual({ ok: false, reason: 'ALREADY_FULL_BLOOM' });
     expect(useSanctuaryStore.getState().profile.dewBalance).toBe(30);
   });
+
+  it('activates a one-time 72h Sunlit Guest Pass, unlocks Pro placement while active, and locks new Pro items after expiry', () => {
+    const startIso = '2026-11-24T08:00:00.000Z';
+    const activeMs = Date.parse('2026-11-25T08:00:00.000Z');
+    const expiredMs = Date.parse('2026-11-27T09:00:00.000Z');
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(activeMs);
+
+    try {
+      useSanctuaryStore.getState().completeOnboarding({
+        sleepGoalMin: 480,
+        stepGoal: 8000,
+        starterItemId: 'lavender',
+        trackingMode: 'phone_only',
+      });
+
+      // Earn enough Dew/Sunlight for Pro items (sakura_sapling costs 80 Dew / 70 Sunlight)
+      useSanctuaryStore.getState().triggerMorningReveal({
+        dateKey: '2026-11-24',
+        sleepMin: 480,
+        steps: 8000,
+        bedtimeOffsetMin: 5,
+      });
+
+      // First Guest Pass activation succeeds
+      const firstActivate = useSanctuaryStore.getState().activateGuestPass(startIso);
+      expect(firstActivate).toBe(true);
+      expect(useSanctuaryStore.getState().profile.guestPassEndsAt).toBe(
+        '2026-11-27T08:00:00.000Z',
+      );
+      expect(useSanctuaryStore.getState().profile.guestPassUsed).toBe(true);
+
+      // Second activation is blocked by one-time guard
+      const secondActivate = useSanctuaryStore
+        .getState()
+        .activateGuestPass('2026-12-01T08:00:00.000Z');
+      expect(secondActivate).toBe(false);
+      expect(useSanctuaryStore.getState().profile.guestPassEndsAt).toBe(
+        '2026-11-27T08:00:00.000Z',
+      );
+
+      // Pro placement succeeds during active Guest Pass
+      const placedPro = useSanctuaryStore
+        .getState()
+        .placeCatalogItem('sakura_sapling', 1, 1);
+      expect(placedPro.ok).toBe(true);
+
+      // Advance time past expiry -> placed Pro item stays, new Pro item is locked
+      nowSpy.mockReturnValue(expiredMs);
+      expect(
+        useSanctuaryStore.getState().activateGuestPass('2026-11-28T08:00:00.000Z'),
+      ).toBe(false);
+
+      expect(
+        useSanctuaryStore
+          .getState()
+          .placements.some((p) => p.itemId === 'sakura_sapling'),
+      ).toBe(true);
+
+      // Earn extra Dew/Sunlight so funds aren't the blocker
+      useSanctuaryStore.getState().triggerMorningReveal({
+        dateKey: '2026-11-27',
+        sleepMin: 480,
+        steps: 9000,
+      });
+
+      const lockedAfterExpiry = useSanctuaryStore
+        .getState()
+        .placeCatalogItem('stone_lantern', 1, 2);
+      expect(lockedAfterExpiry).toEqual({ ok: false, reason: 'PRO_REQUIRED' });
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
+  it('updates trialReminderOptIn and live AI Keeper reflection cleanly', () => {
+    useSanctuaryStore.getState().completeOnboarding({
+      sleepGoalMin: 480,
+      stepGoal: 8000,
+      starterItemId: 'lavender',
+      trackingMode: 'health_sync',
+    });
+
+    useSanctuaryStore.getState().setTrialReminderOptIn(true);
+    expect(useSanctuaryStore.getState().profile.trialReminderOptIn).toBe(true);
+
+    useSanctuaryStore.getState().triggerMorningReveal({
+      dateKey: '2026-11-24',
+      sleepMin: 460,
+      steps: 7800,
+    });
+
+    useSanctuaryStore
+      .getState()
+      .updateRevealKeeperNote(
+        '2026-11-24',
+        'A steady bedtime brought gentle clarity to your meadow.',
+      );
+
+    expect(useSanctuaryStore.getState().dailyLogs['2026-11-24']?.aiInsight).toBe(
+      'A steady bedtime brought gentle clarity to your meadow.',
+    );
+    expect(useSanctuaryStore.getState().pendingReveal?.keeperNote).toBe(
+      'A steady bedtime brought gentle clarity to your meadow.',
+    );
+    expect(useSanctuaryStore.getState().pendingReveal?.log.aiInsight).toBe(
+      'A steady bedtime brought gentle clarity to your meadow.',
+    );
+  });
 });
