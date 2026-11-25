@@ -1,6 +1,6 @@
 import { Component, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Sparkles } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 
 export interface MeadowIsland3DProps {
@@ -735,17 +735,11 @@ function FloatingIslandScene({ reducedMotion, isNight }: { reducedMotion: boolea
         </mesh>
       </group>
 
-      {/* Daytime pollen sparkles / Nighttime glowing lantern fireflies */}
-      <Sparkles
-        count={isNight ? 46 : 34}
-        scale={[5.2, 3.2, 5.2]}
-        size={isNight ? 3.8 : 2.6}
-        speed={reducedMotion ? 0 : isNight ? 0.38 : 0.28}
-        opacity={isNight ? 0.94 : 0.72}
-        color={isNight ? '#F5C976' : '#E3B261'}
-      />
+      {/* Daytime pollen glow / Nighttime lantern fireflies (zero-warning custom Points) */}
+      <MeadowFireflies isNight={isNight} reducedMotion={reducedMotion} />
 
       <OrbitControls
+        target={[0, -0.18, 0]}
         enableZoom={false}
         enablePan={false}
         enableDamping
@@ -756,6 +750,71 @@ function FloatingIslandScene({ reducedMotion, isNight }: { reducedMotion: boolea
         autoRotateSpeed={0.55}
       />
     </>
+  );
+}
+
+const FIREFLY_COUNT = 44;
+
+function MeadowFireflies({ isNight, reducedMotion }: { isNight: boolean; reducedMotion: boolean }) {
+  const pointsRef = useRef<THREE.Points>(null);
+
+  const { geometry, basePositions, phases } = useMemo(() => {
+    const geom = new THREE.BufferGeometry();
+    const positions = new Float32Array(FIREFLY_COUNT * 3);
+    const base = new Float32Array(FIREFLY_COUNT * 3);
+    const phaseArr = new Float32Array(FIREFLY_COUNT);
+
+    for (let i = 0; i < FIREFLY_COUNT; i += 1) {
+      // Deterministic botanical distribution (no Math.random flicker across renders)
+      const angle = i * 2.3999632;
+      const radius = 0.65 + ((i * 37) % 100) * 0.0185;
+      const x = Math.cos(angle) * radius;
+      const y = 0.15 + ((i * 53) % 100) * 0.014;
+      const z = Math.sin(angle) * radius;
+      positions[i * 3] = x;
+      positions[i * 3 + 1] = y;
+      positions[i * 3 + 2] = z;
+      base[i * 3] = x;
+      base[i * 3 + 1] = y;
+      base[i * 3 + 2] = z;
+      phaseArr[i] = i * 0.71;
+    }
+
+    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    return { geometry: geom, basePositions: base, phases: phaseArr };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      geometry.dispose();
+    };
+  }, [geometry]);
+
+  useFrame(({ clock }) => {
+    if (reducedMotion || !pointsRef.current) return;
+    const t = clock.getElapsedTime();
+    const attr = geometry.getAttribute('position') as THREE.BufferAttribute;
+    const arr = attr.array as Float32Array;
+    for (let i = 0; i < FIREFLY_COUNT; i += 1) {
+      const p = phases[i];
+      arr[i * 3] = basePositions[i * 3] + Math.cos(t * 0.45 + p) * 0.09;
+      arr[i * 3 + 1] = basePositions[i * 3 + 1] + Math.sin(t * 0.72 + p) * 0.12;
+      arr[i * 3 + 2] = basePositions[i * 3 + 2] + Math.sin(t * 0.38 + p * 1.3) * 0.09;
+    }
+    attr.needsUpdate = true;
+  });
+
+  return (
+    <points ref={pointsRef} geometry={geometry}>
+      <pointsMaterial
+        color={isNight ? '#F5C976' : '#E3B261'}
+        size={isNight ? 0.075 : 0.052}
+        transparent
+        opacity={isNight ? 0.88 : 0.62}
+        sizeAttenuation
+        depthWrite={false}
+      />
+    </points>
   );
 }
 
@@ -784,7 +843,7 @@ export function MeadowIsland3D({ isNight = false }: MeadowIsland3DProps) {
         <Canvas
           shadows
           dpr={[1, 2]}
-          camera={{ position: [0.4, 2.35, 5.1], fov: 37 }}
+          camera={{ position: [0.75, 2.45, 5.85], fov: 38 }}
           gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
         >
           <FloatingIslandScene reducedMotion={reducedMotion} isNight={isNight} />

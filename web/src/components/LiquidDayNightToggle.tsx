@@ -263,9 +263,22 @@ export function LiquidDayNightToggle({
     if (s.glc) {
       const { gl: c, u } = s.glc;
       const S = G.S;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const W = G.w + G.PAD * 2;
+      const Hh = G.h + G.PAD * 2;
+      const cv = canvasRef.current;
+      const targetDpr = Math.min(window.devicePixelRatio || 1, 2);
+      const wantW = Math.round(W * targetDpr);
+      const wantH = Math.round(Hh * targetDpr);
+      if (cv && (cv.width !== wantW || cv.height !== wantH)) {
+        cv.width = wantW;
+        cv.height = wantH;
+        cv.style.width = `${W}px`;
+        cv.style.height = `${Hh}px`;
+        cv.style.left = cv.style.top = `${-G.PAD}px`;
+      }
+      const dpr = c.drawingBufferWidth / Math.max(1, W);
       c.viewport(0, 0, c.drawingBufferWidth, c.drawingBufferHeight);
-      c.uniform2f(u.uRes, G.w + G.PAD * 2, G.h + G.PAD * 2);
+      c.uniform2f(u.uRes, W, Hh);
       c.uniform1f(u.uDpr, dpr);
       c.uniform1f(u.uS, S);
       c.uniform1f(u.uTime, s.time);

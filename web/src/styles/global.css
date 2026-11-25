@@ -1973,9 +1973,18 @@ p {
   }
 
   .hero-stage-bar {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 8px;
     padding: 12px 12px 0;
+  }
+
+  .hero-stage-mode {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .billing-toggle {
