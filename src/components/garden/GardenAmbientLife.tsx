@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
@@ -262,7 +262,6 @@ export function MeadowButterfly({
       style={[styles.absolute, { left: startX, top: startY }, containerStyle]}
     >
       {isNight ? (
-        // Warm glowing evening firefly wisp
         <Svg width={18} height={18} viewBox="0 0 18 18">
           <Circle cx={9} cy={9} r={7} fill="#E8BF6E" opacity={0.25} />
           <Circle cx={9} cy={9} r={3} fill="#FFF2B8" />
@@ -448,6 +447,195 @@ export function PondCaustics({
   );
 }
 
+export interface PondShimmerProps {
+  left: number;
+  top: number;
+  isNight: boolean;
+  reducedMotion: boolean;
+}
+
+/**
+ * Drifting golden koi beneath the pond surface paired with delicate water shimmer glints.
+ */
+export function PondShimmer({
+  left,
+  top,
+  isNight,
+  reducedMotion,
+}: PondShimmerProps) {
+  const koiX = useSharedValue(-10);
+  const koiY = useSharedValue(-2);
+  const glintOpacity = useSharedValue(0.5);
+
+  useEffect(() => {
+    if (reducedMotion) {
+      koiX.value = -4;
+      koiY.value = 0;
+      glintOpacity.value = 0.55;
+      return;
+    }
+
+    koiX.value = withRepeat(
+      withSequence(
+        withTiming(11, { duration: 4800, easing: Easing.inOut(Easing.sin) }),
+        withTiming(-11, { duration: 4800, easing: Easing.inOut(Easing.sin) }),
+      ),
+      -1,
+      false,
+    );
+
+    koiY.value = withRepeat(
+      withSequence(
+        withTiming(3.5, { duration: 2400, easing: Easing.inOut(Easing.sin) }),
+        withTiming(-3.5, { duration: 2400, easing: Easing.inOut(Easing.sin) }),
+      ),
+      -1,
+      false,
+    );
+
+    glintOpacity.value = withRepeat(
+      withSequence(
+        withTiming(0.88, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0.28, { duration: 1500, easing: Easing.inOut(Easing.sin) }),
+      ),
+      -1,
+      false,
+    );
+  }, [glintOpacity, koiX, koiY, reducedMotion]);
+
+  const koiStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: koiX.value }, { translateY: koiY.value }],
+  }));
+
+  const glintStyle = useAnimatedStyle(() => ({
+    opacity: glintOpacity.value,
+  }));
+
+  return (
+    <View
+      pointerEvents="none"
+      style={[
+        styles.pondShimmerAnchor,
+        { left: left - 26, top: top - 12 },
+      ]}
+    >
+      <Animated.View style={[styles.absolute, { left: 18, top: 6 }, koiStyle]}>
+        <Svg width={18} height={10} viewBox="0 0 18 10">
+          <Ellipse cx={9.5} cy={5} rx={5.2} ry={2.4} fill="#E79362" opacity={0.85} />
+          <Polygon points="4.5,5 1,2.5 2,5 1,7.5" fill="#F2BE79" opacity={0.8} />
+          <Circle cx={12.5} cy={4.6} r={0.9} fill="#FFF3D4" />
+        </Svg>
+      </Animated.View>
+      <Animated.View style={[styles.absolute, { left: 8, top: 4 }, glintStyle]}>
+        <Svg width={36} height={16} viewBox="0 0 36 16">
+          <Circle
+            cx={6}
+            cy={5}
+            r={1.3}
+            fill={isNight ? '#F8DF9C' : '#FFFFFF'}
+          />
+          <Circle
+            cx={28}
+            cy={10}
+            r={1.1}
+            fill={isNight ? '#F8DF9C' : '#EBF9FC'}
+          />
+        </Svg>
+      </Animated.View>
+    </View>
+  );
+}
+
+export interface GreenhouseWarmthWispsProps {
+  left: number;
+  top: number;
+  active: boolean;
+  isWarmTone: boolean;
+  reducedMotion: boolean;
+}
+
+/**
+ * Gentle rising warmth curls floating above the Corner Conservatory roof ridge.
+ */
+export function GreenhouseWarmthWisps({
+  left,
+  top,
+  active,
+  isWarmTone,
+  reducedMotion,
+}: GreenhouseWarmthWispsProps) {
+  const riseA = useSharedValue(0);
+  const riseB = useSharedValue(0);
+
+  useEffect(() => {
+    if (!active || reducedMotion) {
+      riseA.value = 0.3;
+      riseB.value = 0.6;
+      return;
+    }
+
+    riseA.value = 0;
+    riseB.value = 0;
+    riseA.value = withRepeat(
+      withTiming(1, { duration: 3200, easing: Easing.out(Easing.quad) }),
+      -1,
+      false,
+    );
+    riseB.value = withDelay(
+      1600,
+      withRepeat(
+        withTiming(1, { duration: 3200, easing: Easing.out(Easing.quad) }),
+        -1,
+        false,
+      ),
+    );
+  }, [active, reducedMotion, riseA, riseB]);
+
+  const wispAStyle = useAnimatedStyle(() => ({
+    opacity: (1 - riseA.value) * 0.55,
+    transform: [
+      { translateX: Math.sin(riseA.value * Math.PI) * 3.5 },
+      { translateY: -riseA.value * 18 },
+      { scale: 0.7 + riseA.value * 0.6 },
+    ],
+  }));
+
+  const wispBStyle = useAnimatedStyle(() => ({
+    opacity: (1 - riseB.value) * 0.45,
+    transform: [
+      { translateX: -Math.sin(riseB.value * Math.PI) * 3 },
+      { translateY: -riseB.value * 15 },
+      { scale: 0.65 + riseB.value * 0.55 },
+    ],
+  }));
+
+  if (!active) {
+    return null;
+  }
+
+  const wispColor = isWarmTone
+    ? 'rgba(248, 224, 172, 0.72)'
+    : 'rgba(252, 250, 244, 0.76)';
+
+  return (
+    <View
+      pointerEvents="none"
+      style={[styles.absolute, { left: left - 8, top: top - 10 }]}
+    >
+      <Animated.View
+        style={[styles.warmthWisp, { backgroundColor: wispColor }, wispAStyle]}
+      />
+      <Animated.View
+        style={[
+          styles.warmthWispSmall,
+          { backgroundColor: wispColor },
+          wispBStyle,
+        ]}
+      />
+    </View>
+  );
+}
+
 const VOLUMETRIC_FOG_OPACITY: Record<FogLevel, number> = {
   0: 0,
   1: 0.22,
@@ -462,6 +650,7 @@ interface FogWispSpec {
   width: number;
   height: number;
   driftRange: number;
+  clearOffsetX: number;
   durationMs: number;
   delayMs: number;
   wispOpacity: number;
@@ -475,6 +664,7 @@ const FOG_WISPS: readonly FogWispSpec[] = [
     width: 340,
     height: 120,
     driftRange: 54,
+    clearOffsetX: -72,
     durationMs: 14000,
     delayMs: 0,
     wispOpacity: 0.72,
@@ -486,6 +676,7 @@ const FOG_WISPS: readonly FogWispSpec[] = [
     width: 380,
     height: 136,
     driftRange: -62,
+    clearOffsetX: 78,
     durationMs: 17000,
     delayMs: 900,
     wispOpacity: 0.82,
@@ -497,6 +688,7 @@ const FOG_WISPS: readonly FogWispSpec[] = [
     width: 360,
     height: 128,
     driftRange: 48,
+    clearOffsetX: -68,
     durationMs: 15500,
     delayMs: 1800,
     wispOpacity: 0.76,
@@ -508,6 +700,7 @@ const FOG_WISPS: readonly FogWispSpec[] = [
     width: 390,
     height: 132,
     driftRange: -46,
+    clearOffsetX: 64,
     durationMs: 18500,
     delayMs: 600,
     wispOpacity: 0.68,
@@ -516,18 +709,27 @@ const FOG_WISPS: readonly FogWispSpec[] = [
 
 function FogMistWisp({
   spec,
-  active,
+  clearing,
   reducedMotion,
 }: {
   spec: FogWispSpec;
-  active: boolean;
+  clearing: boolean;
   reducedMotion: boolean;
 }) {
+  const rawId = useId();
+  const gradId = `fogWispGrad_${spec.id}_${rawId.replace(/[^a-zA-Z0-9]/g, '')}`;
   const driftX = useSharedValue(0);
 
   useEffect(() => {
-    if (!active || reducedMotion) {
+    if (reducedMotion) {
       driftX.value = 0;
+      return;
+    }
+    if (clearing) {
+      driftX.value = withTiming(spec.clearOffsetX, {
+        duration: 640,
+        easing: Easing.out(Easing.cubic),
+      });
       return;
     }
     driftX.value = withDelay(
@@ -551,13 +753,19 @@ function FogMistWisp({
         false,
       ),
     );
-  }, [active, driftX, reducedMotion, spec.delayMs, spec.driftRange, spec.durationMs]);
+  }, [
+    clearing,
+    driftX,
+    reducedMotion,
+    spec.clearOffsetX,
+    spec.delayMs,
+    spec.driftRange,
+    spec.durationMs,
+  ]);
 
   const wispStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: driftX.value }],
   }));
-
-  const gradId = `fogWispGrad_${spec.id}`;
 
   return (
     <Animated.View
@@ -602,38 +810,72 @@ export function VolumetricFogLayer({
   reducedMotion,
 }: VolumetricFogLayerProps) {
   const layerOpacity = useSharedValue(VOLUMETRIC_FOG_OPACITY[fogLevel]);
+  const [shouldRenderMist, setShouldRenderMist] = useState(fogLevel > 0);
+  const clearTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const target = VOLUMETRIC_FOG_OPACITY[fogLevel];
-    if (reducedMotion) {
-      layerOpacity.value = target;
-    } else {
-      layerOpacity.value = withTiming(target, {
-        duration: 520,
-        easing: Easing.inOut(Easing.quad),
-      });
+    if (clearTimerRef.current) {
+      clearTimeout(clearTimerRef.current);
+      clearTimerRef.current = null;
     }
+
+    const target = VOLUMETRIC_FOG_OPACITY[fogLevel];
+
+    if (fogLevel > 0) {
+      setShouldRenderMist(true);
+      if (reducedMotion) {
+        layerOpacity.value = target;
+      } else {
+        layerOpacity.value = withTiming(target, {
+          duration: 520,
+          easing: Easing.out(Easing.cubic),
+        });
+      }
+      return;
+    }
+
+    // fogLevel === 0: keep wisps mounted while parting & dissolving smoothly
+    if (reducedMotion) {
+      layerOpacity.value = 0;
+      setShouldRenderMist(false);
+      return;
+    }
+
+    layerOpacity.value = withTiming(0, {
+      duration: 660,
+      easing: Easing.out(Easing.cubic),
+    });
+
+    clearTimerRef.current = setTimeout(() => {
+      setShouldRenderMist(false);
+    }, 680);
   }, [fogLevel, layerOpacity, reducedMotion]);
+
+  useEffect(() => {
+    return () => {
+      if (clearTimerRef.current) {
+        clearTimeout(clearTimerRef.current);
+      }
+    };
+  }, []);
 
   const containerStyle = useAnimatedStyle(() => ({
     opacity: layerOpacity.value,
   }));
-
-  const isActive = fogLevel > 0;
 
   return (
     <Animated.View
       pointerEvents="none"
       style={[styles.volumetricFogContainer, containerStyle]}
     >
-      {isActive ? (
+      {shouldRenderMist ? (
         <>
           <View style={styles.volumetricFogTint} />
           {FOG_WISPS.map((wisp) => (
             <FogMistWisp
               key={wisp.id}
               spec={wisp}
-              active={isActive}
+              clearing={fogLevel === 0}
               reducedMotion={reducedMotion}
             />
           ))}
@@ -652,12 +894,30 @@ const styles = StyleSheet.create({
     width: POND_CAUSTIC_WIDTH,
     height: POND_CAUSTIC_HEIGHT,
   },
+  pondShimmerAnchor: {
+    position: 'absolute',
+    width: 52,
+    height: 24,
+  },
   causticRingLayer: {
     position: 'absolute',
     top: 0,
     left: 0,
     width: POND_CAUSTIC_WIDTH,
     height: POND_CAUSTIC_HEIGHT,
+  },
+  warmthWisp: {
+    width: 11,
+    height: 9,
+    borderRadius: 5,
+  },
+  warmthWispSmall: {
+    position: 'absolute',
+    left: 4,
+    top: 2,
+    width: 7,
+    height: 6,
+    borderRadius: 3.5,
   },
   volumetricFogContainer: {
     position: 'absolute',
