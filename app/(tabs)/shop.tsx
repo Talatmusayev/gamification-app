@@ -1,11 +1,15 @@
 import { useRouter } from 'expo-router';
-import { Check, Droplets, Lock, Play, Plus, Sun } from 'lucide-react-native';
+import { Check, Droplets, Lock, Play, Plus, Sparkles, Sun } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GardenSprite } from '@/components/ui/GardenSprite';
 import { SUNLIT_MEADOW_CATALOG } from '@/domain/catalog';
+import {
+  getGuestPassRemainingLabel,
+  hasProAccess,
+} from '@/domain/subscription';
 import type { CatalogItem, ItemCategory } from '@/domain/types';
 import {
   getRemainingRewardedAds,
@@ -57,6 +61,10 @@ export default function ShopScreen() {
     };
   }, [profile.isPro]);
 
+  const hasPro = hasProAccess(profile);
+  const guestPassLabel = !profile.isPro
+    ? getGuestPassRemainingLabel(profile.guestPassEndsAt)
+    : null;
   const remainingRewardedAds = getRemainingRewardedAds(watchedToday);
 
   const handleWatchRewardedDew = async () => {
@@ -107,7 +115,8 @@ export default function ShopScreen() {
 
   const renderItem = ({ item, index }: { item: CatalogItem; index: number }) => {
     const isOwned = ownedItemIds.includes(item.id);
-    const isProLocked = item.isPro && !profile.isPro && !isOwned;
+    const isProLocked = item.isPro && !hasPro && !isOwned;
+    const isGuestPassUnlocked = item.isPro && !isOwned && Boolean(guestPassLabel);
     const canAfford =
       isOwned ||
       (profile.dewBalance >= item.dewCost &&
@@ -126,7 +135,12 @@ export default function ShopScreen() {
               <Check size={11} strokeWidth={2} color={palette.accentMoss} />
               <Text style={styles.ownedTagText}>Owned</Text>
             </View>
-          ) : item.isPro ? (
+          ) : isGuestPassUnlocked ? (
+            <View style={[styles.statusBadge, styles.ownedTag]}>
+              <Sparkles size={11} strokeWidth={1.7} color={palette.accentMoss} />
+              <Text style={styles.ownedTagText}>Guest pass</Text>
+            </View>
+          ) : item.isPro && !hasPro ? (
             <View style={[styles.statusBadge, styles.proTag]}>
               <Lock size={11} strokeWidth={1.7} color={palette.textMuted} />
               <Text style={styles.proTagText}>Pro</Text>
@@ -248,6 +262,26 @@ export default function ShopScreen() {
         })}
       </View>
 
+      {guestPassLabel ? (
+        <View style={styles.guestPassBannerWrap}>
+          <Pressable
+            onPress={() => {
+              hapticSelection();
+              router.push('/paywall?source=shop');
+            }}
+            hitSlop={4}
+            accessibilityRole="button"
+            accessibilityLabel={`Sunlit Guest Pass active, ${guestPassLabel}. View Pro plans`}
+            style={styles.guestPassBanner}
+          >
+            <Sparkles size={14} strokeWidth={1.6} color={palette.accentMoss} />
+            <Text style={styles.guestPassBannerText}>
+              Sunlit Guest Pass · {guestPassLabel} · All Pro species unlocked
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+
       {!profile.isPro && remainingRewardedAds > 0 ? (
         <View style={styles.rewardedRow}>
           <Pressable
@@ -257,21 +291,33 @@ export default function ShopScreen() {
             disabled={isWatchingAd}
             hitSlop={4}
             accessibilityRole="button"
-            accessibilityLabel={`Gather +${REWARDED_DEW_AMOUNT} Dew by watching a short video`}
+            accessibilityLabel={`Cozy opt-in rewarded dew: +${REWARDED_DEW_AMOUNT} Dew, short video, ad-free in Pro`}
             accessibilityState={{ disabled: isWatchingAd, busy: isWatchingAd }}
             style={({ pressed }) => [
-              styles.rewardedPill,
+              styles.rewardedBanner,
               isWatchingAd && styles.rewardedPillBusy,
               pressed && !reducedMotion && styles.placeButtonPressed,
             ]}
           >
-            <Droplets size={14} strokeWidth={1.7} color={palette.accentDew} />
-            <Text style={styles.rewardedPillText}>
-              {isWatchingAd
-                ? 'Gathering Dew...'
-                : rewardFeedback ?? `Gather +${REWARDED_DEW_AMOUNT} Dew · Short video`}
-            </Text>
-            <Play size={12} strokeWidth={1.8} color={palette.accentDew} />
+            <View style={styles.rewardedIconCircle}>
+              <Droplets size={16} strokeWidth={1.7} color={palette.accentDew} />
+            </View>
+            <View style={styles.rewardedCopy}>
+              <Text style={styles.rewardedTitle}>
+                {isWatchingAd
+                  ? 'Gathering Dew...'
+                  : rewardFeedback ?? 'Cozy opt-in rewarded dew'}
+              </Text>
+              <Text style={styles.rewardedSubtitle}>
+                +{REWARDED_DEW_AMOUNT} Dew · Short video · Ad-free in Pro
+              </Text>
+            </View>
+            <View style={styles.rewardedRight}>
+              <Text style={styles.rewardedRemaining}>
+                {remainingRewardedAds} left
+              </Text>
+              <Play size={13} strokeWidth={1.8} color={palette.accentDew} />
+            </View>
           </Pressable>
         </View>
       ) : !profile.isPro && rewardFeedback ? (
@@ -367,22 +413,78 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodySemiBold,
     color: palette.accentMossText,
   },
+  guestPassBannerWrap: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xs,
+  },
+  guestPassBanner: {
+    minHeight: 44,
+    borderRadius: radii.md,
+    backgroundColor: palette.surfaceElevated,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: palette.accentMoss,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  guestPassBannerText: {
+    flex: 1,
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12,
+    color: palette.accentMoss,
+    fontVariant: ['tabular-nums'],
+  },
   rewardedRow: {
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.sm,
   },
-  rewardedPill: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs + 2,
-    minHeight: 38,
+  rewardedBanner: {
+    minHeight: 54,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radii.full,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.lg,
     backgroundColor: palette.surfaceElevated,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: palette.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  rewardedIconCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: radii.full,
+    backgroundColor: 'rgba(55, 102, 117, 0.10)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rewardedCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  rewardedTitle: {
+    fontFamily: fonts.bodySemiBold,
+    fontSize: 13,
+    color: palette.textPrimary,
+  },
+  rewardedSubtitle: {
+    fontFamily: fonts.body,
+    fontSize: 12,
+    color: palette.textSecondary,
+    fontVariant: ['tabular-nums'],
+  },
+  rewardedRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  rewardedRemaining: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12,
+    color: palette.accentDew,
+    fontVariant: ['tabular-nums'],
   },
   rewardedPillBusy: {
     opacity: 0.65,

@@ -10,6 +10,7 @@ import { processMorningReveal } from '../domain/fog';
 import { movePlacement, validateAndPlaceItem } from '../domain/grid';
 import { waterPlacement } from '../domain/growth';
 import { completeLanternSession, startLanternSession } from '../domain/lantern';
+import { computeGuestPassExpiry, hasProAccess } from '../domain/subscription';
 import {
   buildWidgetSnapshot,
   persistWidgetSnapshot,
@@ -81,6 +82,9 @@ export interface SanctuaryActions {
   finishLantern: (nowIso?: string, steps?: number) => MorningRevealResult | null;
   dismissPendingReveal: () => void;
   setPendingReveal: (reveal: MorningRevealResult | null) => void;
+  updateRevealKeeperNote: (dateKey: string, aiInsight: string) => void;
+  activateGuestPass: (nowIso?: string) => boolean;
+  setTrialReminderOptIn: (enabled: boolean) => void;
   updateGoals: (sleepGoalMin: number, stepGoal: number) => void;
   resetAllData: () => void;
 }
@@ -253,7 +257,7 @@ export const useSanctuaryStore = create<SanctuaryStore>()(
           ownedItemIds: state.ownedItemIds,
           dewBalance: state.profile.dewBalance,
           sunlightBalance: state.profile.sunlightBalance,
-          isPro: state.profile.isPro,
+          isPro: hasProAccess(state.profile),
         });
 
         if (result.ok) {
@@ -396,6 +400,70 @@ export const useSanctuaryStore = create<SanctuaryStore>()(
 
       setPendingReveal: (reveal) => {
         set({ pendingReveal: reveal });
+      },
+
+      updateRevealKeeperNote: (dateKey, aiInsight) => {
+        const trimmed = aiInsight.trim();
+        if (!trimmed) {
+          return;
+        }
+        set((state) => {
+          const existingLog = state.dailyLogs[dateKey];
+          if (!existingLog) {
+            return state;
+          }
+          const updatedLog: DailyLog = {
+            ...existingLog,
+            aiInsight: trimmed,
+          };
+          const updatedPending =
+            state.pendingReveal && state.pendingReveal.log.dateKey === dateKey
+              ? {
+                  ...state.pendingReveal,
+                  keeperNote: trimmed,
+                  log: updatedLog,
+                }
+              : state.pendingReveal;
+
+          return {
+            dailyLogs: {
+              ...state.dailyLogs,
+              [dateKey]: updatedLog,
+            },
+            pendingReveal: updatedPending,
+          };
+        });
+      },
+
+      activateGuestPass: (nowIso) => {
+        const state = get();
+        if (
+          state.profile.isPro ||
+          state.profile.guestPassUsed ||
+          typeof state.profile.guestPassEndsAt === 'string'
+        ) {
+          return false;
+        }
+
+        const guestPassEndsAt = computeGuestPassExpiry(nowIso);
+        set({
+          profile: {
+            ...state.profile,
+            guestPassEndsAt,
+            guestPassUsed: true,
+          },
+        });
+        syncWidgetSnapshot(get());
+        return true;
+      },
+
+      setTrialReminderOptIn: (enabled) => {
+        set((state) => ({
+          profile: {
+            ...state.profile,
+            trialReminderOptIn: Boolean(enabled),
+          },
+        }));
       },
 
       updateGoals: (sleepGoalMin, stepGoal) => {

@@ -5,13 +5,14 @@ import {
   Droplets,
   Moon,
   Move,
+  Settings,
   Share2,
   Sparkles,
   Sun,
   Users,
   X,
 } from 'lucide-react-native';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -29,8 +30,18 @@ import {
   getGrowthLabel,
   getGrowthStage,
 } from '@/domain/growth';
-import type { GardenPlacement } from '@/domain/types';
+import type { GardenPlacement, MorningRevealResult } from '@/domain/types';
+import {
+  getGuestPassRemainingLabel,
+  hasProAccess,
+  isGuestPassActive,
+} from '@/domain/subscription';
 import { trackEvent } from '@/services/analyticsService';
+import { fetchDailyHealthSummary } from '@/services/healthService';
+import {
+  fetchGardenKeeperInsight,
+  syncMorningReveal,
+} from '@/services/syncService';
 import { useSanctuaryStore } from '@/state/useSanctuaryStore';
 import { liquidGlassSubtle, liquidGlassSurface } from '@/theme/glass';
 import {
@@ -107,12 +118,18 @@ export default function SanctuaryScreen() {
   const triggerMorningReveal = useSanctuaryStore((s) => s.triggerMorningReveal);
   const dismissPendingReveal = useSanctuaryStore((s) => s.dismissPendingReveal);
   const setPendingReveal = useSanctuaryStore((s) => s.setPendingReveal);
+  const updateRevealKeeperNote = useSanctuaryStore(
+    (s) => s.updateRevealKeeperNote,
+  );
 
   const [placingItemId, setPlacingItemId] = useState<string | null>(null);
   const [movingPlacementId, setMovingPlacementId] = useState<string | null>(null);
   const [selectedPlacementId, setSelectedPlacementId] = useState<string | null>(null);
   const [recentlyWateredId, setRecentlyWateredId] = useState<string | null>(null);
   const wateredTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoHealthCheckedRef = useRef(false);
+  const healthRevealPendingRef = useRef(false);
+  const [guestPassChipDismissed, setGuestPassChipDismissed] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [lanternModalOpen, setLanternModalOpen] = useState(false);
   const [fieldSnapModalOpen, setFieldSnapModalOpen] = useState(false);
@@ -137,6 +154,94 @@ export default function SanctuaryScreen() {
       }
     };
   }, []);
+
+  const syncRevealInBackground = useCallback(
+    async (
+      result: MorningRevealResult,
+      source: string,
+      fogCleared: boolean,
+    ) => {
+      if (result.alreadyRevealed) {
+        return;
+      }
+
+      await syncMorningReveal({
+        dateKey: result.log.dateKey,
+        sleepMin: result.log.sleepMin,
+        steps: result.log.steps,
+        source,
+        sleepGoalMin: profile.sleepGoalMin,
+        stepGoal: profile.stepGoal,
+        fogCleared,
+      }).catch(() => ({ synced: false }));
+
+      const currentLogs = Object.values(useSanctuaryStore.getState().dailyLogs);
+      const insightResult = await fetchGardenKeeperInsight({
+        sleepGoalMin: profile.sleepGoalMin,
+        stepGoal: profile.stepGoal,
+        recentLogs: currentLogs,
+        fogCleared,
+      }).catch(() => null);
+
+      if (insightResult?.source === 'ai' && insightResult.insight) {
+        updateRevealKeeperNote(result.log.dateKey, insightResult.insight);
+      }
+    },
+    [profile.sleepGoalMin, profile.stepGoal, updateRevealKeeperNote],
+  );
+
+  useEffect(() => {
+    if (
+      !profile.onboardingCompleted ||
+      profile.trackingMode !== 'health_sync' ||
+      autoHealthCheckedRef.current
+    ) {
+      return;
+    }
+
+    autoHealthCheckedRef.current = true;
+    const todayKey = getTodayDateKey();
+    const storeState = useSanctuaryStore.getState();
+    if (storeState.dailyLogs[todayKey] || storeState.pendingReveal) {
+      return;
+    }
+
+    let active = true;
+    void fetchDailyHealthSummary(todayKey).then((summary) => {
+      if (!active) {
+        return;
+      }
+      const latestState = useSanctuaryStore.getState();
+      if (latestState.dailyLogs[todayKey] || latestState.pendingReveal) {
+        return;
+      }
+      if (!summary.available || (summary.sleepMin <= 0 && summary.steps <= 0)) {
+        return;
+      }
+
+      const fogCleared = latestState.profile.fogLevel > 0;
+      const result = triggerMorningReveal({
+        dateKey: todayKey,
+        sleepMin: summary.sleepMin,
+        steps: summary.steps,
+        bedtimeOffsetMin: summary.bedtimeOffsetMin,
+      });
+
+      if (!result.alreadyRevealed) {
+        hapticSuccess();
+        void syncRevealInBackground(result, summary.source, fogCleared);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [
+    profile.onboardingCompleted,
+    profile.trackingMode,
+    syncRevealInBackground,
+    triggerMorningReveal,
+  ]);
 
   const harmony = useMemo(
     () => calculateHarmonyScore(Object.values(dailyLogs)),
@@ -279,8 +384,9 @@ export default function SanctuaryScreen() {
   };
 
   const nextUnlockWhisper = useMemo(() => {
+    const proUnlocked = hasProAccess(profile);
     const candidates = SUNLIT_MEADOW_CATALOG.filter(
-      (item) => (!item.isPro || profile.isPro) && !ownedItemIds.includes(item.id),
+      (item) => (!item.isPro || proUnlocked) && !ownedItemIds.includes(item.id),
     );
     if (candidates.length === 0) {
       return null;
@@ -310,9 +416,12 @@ export default function SanctuaryScreen() {
       return `${bestItem.name} · ${bestMissingSun} Sunlight away`;
     }
     return `${bestItem.name} · ${bestMissingDew} Dew away`;
-  }, [ownedItemIds, profile.dewBalance, profile.isPro, profile.sunlightBalance]);
+  }, [
+    ownedItemIds,
+    profile,
+  ]);
 
-  const handleRevealTrigger = () => {
+  const handleRevealTrigger = async () => {
     setFeedbackMessage(null);
     if (pendingReveal) {
       return;
@@ -330,6 +439,38 @@ export default function SanctuaryScreen() {
       }
       return;
     }
+
+    if (
+      profile.trackingMode === 'health_sync' &&
+      !healthRevealPendingRef.current
+    ) {
+      healthRevealPendingRef.current = true;
+      try {
+        const summary = await fetchDailyHealthSummary(todayKey);
+        if (
+          summary.available &&
+          (summary.sleepMin > 0 || summary.steps > 0)
+        ) {
+          const fogCleared = profile.fogLevel > 0;
+          const result = triggerMorningReveal({
+            dateKey: todayKey,
+            sleepMin: summary.sleepMin,
+            steps: summary.steps,
+            bedtimeOffsetMin: summary.bedtimeOffsetMin,
+          });
+          if (result.alreadyRevealed) {
+            setPendingReveal(result);
+          } else {
+            hapticSuccess();
+            void syncRevealInBackground(result, summary.source, fogCleared);
+          }
+          return;
+        }
+      } finally {
+        healthRevealPendingRef.current = false;
+      }
+    }
+
     hapticLight();
     setCheckInModalOpen(true);
   };
@@ -342,6 +483,7 @@ export default function SanctuaryScreen() {
     setCheckInModalOpen(false);
 
     const todayKey = getTodayDateKey();
+    const fogCleared = profile.fogLevel > 0;
     const result = triggerMorningReveal({
       dateKey: todayKey,
       sleepMin: restPreset.sleepMin,
@@ -351,10 +493,12 @@ export default function SanctuaryScreen() {
       setPendingReveal(result);
     } else {
       hapticSuccess();
+      void syncRevealInBackground(result, 'phone_only', fogCleared);
     }
   };
 
   const handleFinishLantern = () => {
+    const fogCleared = profile.fogLevel > 0;
     const result = finishLantern(new Date().toISOString(), 0);
     setLanternModalOpen(false);
     if (!result) {
@@ -363,6 +507,8 @@ export default function SanctuaryScreen() {
       );
     } else if (result.alreadyRevealed) {
       setPendingReveal(result);
+    } else {
+      void syncRevealInBackground(result, 'goodnight_lantern', fogCleared);
     }
   };
 
@@ -386,6 +532,11 @@ export default function SanctuaryScreen() {
   const selectedIsPlant = selectedItem?.category === 'plant';
   const canAffordWater = profile.dewBalance >= WATER_DEW_COST;
   const showWaterButton = selectedIsPlant && selectedStage < 3;
+  const guestPassActive =
+    !profile.isPro && isGuestPassActive(profile.guestPassEndsAt);
+  const guestPassRemaining = guestPassActive
+    ? getGuestPassRemainingLabel(profile.guestPassEndsAt)
+    : null;
 
   return (
     <View style={styles.screen}>
@@ -442,7 +593,54 @@ export default function SanctuaryScreen() {
             <Users size={16} strokeWidth={1.6} color={palette.accentMoss} />
             <Text style={styles.duoPillText}>Duo</Text>
           </Pressable>
+
+          <Pressable
+            onPress={() => {
+              hapticSelection();
+              router.push('/settings');
+            }}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Open settings"
+            style={styles.settingsPill}
+          >
+            <Settings size={16} strokeWidth={1.6} color={palette.textPrimary} />
+          </Pressable>
         </View>
+
+        {guestPassRemaining && !guestPassChipDismissed ? (
+          <View pointerEvents="box-none" style={styles.guestPassRow}>
+            <View style={styles.guestPassChip}>
+              <Pressable
+                onPress={() => {
+                  hapticSelection();
+                  router.push('/paywall?source=sanctuary');
+                }}
+                hitSlop={6}
+                accessibilityRole="button"
+                accessibilityLabel={`Sunlit Guest Pass active, ${guestPassRemaining}. View Pro options`}
+                style={styles.guestPassLabelButton}
+              >
+                <Sparkles size={13} strokeWidth={1.6} color={palette.accentMoss} />
+                <Text style={styles.guestPassChipText} numberOfLines={1}>
+                  Sunlit Guest Pass · {guestPassRemaining}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  hapticSelection();
+                  setGuestPassChipDismissed(true);
+                }}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Dismiss guest pass notice"
+                style={styles.guestPassClose}
+              >
+                <X size={13} strokeWidth={1.7} color={palette.textMuted} />
+              </Pressable>
+            </View>
+          </View>
+        ) : null}
       </View>
 
       <View pointerEvents="box-none" style={styles.bottomChrome}>
@@ -655,7 +853,9 @@ export default function SanctuaryScreen() {
           </Pressable>
 
           <Pressable
-            onPress={handleRevealTrigger}
+            onPress={() => {
+              void handleRevealTrigger();
+            }}
             hitSlop={6}
             accessibilityRole="button"
             accessibilityLabel="Open morning reveal"
@@ -879,6 +1079,49 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodyMedium,
     fontSize: 13,
     color: palette.textPrimary,
+  },
+  settingsPill: {
+    ...liquidGlassSurface,
+    width: 44,
+    height: 44,
+    borderRadius: radii.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guestPassRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.xs,
+  },
+  guestPassChip: {
+    ...liquidGlassSubtle,
+    minHeight: 36,
+    borderRadius: radii.full,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: spacing.md,
+    paddingRight: spacing.xs,
+    gap: spacing.xs,
+  },
+  guestPassLabelButton: {
+    minHeight: 36,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  guestPassChipText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 12,
+    color: palette.accentMoss,
+    fontVariant: ['tabular-nums'],
+  },
+  guestPassClose: {
+    width: 28,
+    height: 28,
+    borderRadius: radii.full,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modeBanner: {
     ...liquidGlassSurface,

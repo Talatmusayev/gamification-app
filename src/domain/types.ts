@@ -14,6 +14,9 @@ export interface UserProfile {
   fogLevel: FogLevel;
   isPro: boolean;
   onboardingCompleted: boolean;
+  guestPassEndsAt?: string | null;
+  guestPassUsed?: boolean;
+  trialReminderOptIn?: boolean;
 }
 
 export interface DailyLog {

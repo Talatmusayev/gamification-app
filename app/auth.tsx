@@ -38,7 +38,7 @@ export default function AuthScreen() {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace('/(tabs)');
+      router.replace('/(tabs)/sanctuary');
     }
   };
 
