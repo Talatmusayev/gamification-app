@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useId } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
@@ -12,6 +12,7 @@ import Animated, {
 import Svg, {
   Circle,
   Defs,
+  Ellipse,
   G,
   LinearGradient,
   Path,
@@ -36,15 +37,15 @@ export interface TimeOfDayAtmosphere {
 
 export function getTimeOfDayAtmosphere(hour: number): TimeOfDayAtmosphere {
   if (hour >= 5 && hour < 8) {
-    // Dawn — soft rose-apricot horizon fading into morning mist
+    // Dawn — soft mist-sage & warm apricot horizon
     return {
-      skyTop: '#EAE8F0',
-      skyMid: '#F5ECE5',
+      skyTop: '#E4ECE8',
+      skyMid: '#F4EDE4',
       skyBottom: '#FBF2E4',
       cloudColor: '#FFF7F0',
-      cloudOpacity: 0.72,
+      cloudOpacity: 0.74,
       sunbeamColor: '#FFE5BD',
-      sunbeamOpacity: 0.24,
+      sunbeamOpacity: 0.25,
       isNight: false,
       isDusk: false,
     };
@@ -58,7 +59,7 @@ export function getTimeOfDayAtmosphere(hour: number): TimeOfDayAtmosphere {
       cloudColor: '#FFFFFF',
       cloudOpacity: 0.78,
       sunbeamColor: '#FFF5D6',
-      sunbeamOpacity: 0.26,
+      sunbeamOpacity: 0.27,
       isNight: false,
       isDusk: false,
     };
@@ -70,23 +71,23 @@ export function getTimeOfDayAtmosphere(hour: number): TimeOfDayAtmosphere {
       skyMid: '#EFF2E8',
       skyBottom: '#FAF5E8',
       cloudColor: '#FFFDF8',
-      cloudOpacity: 0.75,
+      cloudOpacity: 0.76,
       sunbeamColor: '#FFF1C7',
-      sunbeamOpacity: 0.28,
+      sunbeamOpacity: 0.30,
       isNight: false,
       isDusk: false,
     };
   }
   if (hour >= 17 && hour < 20) {
-    // Dusk — warm terracotta-amber twilight
+    // Dusk — warm sandstone-amber golden hour
     return {
-      skyTop: '#CFC6D0',
-      skyMid: '#E9D2BE',
+      skyTop: '#D9D6CA',
+      skyMid: '#EAD3BD',
       skyBottom: '#F6DFC2',
       cloudColor: '#FDE9D2',
-      cloudOpacity: 0.65,
+      cloudOpacity: 0.66,
       sunbeamColor: '#F4BC78',
-      sunbeamOpacity: 0.22,
+      sunbeamOpacity: 0.28,
       isNight: false,
       isDusk: true,
     };
@@ -97,7 +98,7 @@ export function getTimeOfDayAtmosphere(hour: number): TimeOfDayAtmosphere {
     skyMid: nightPalette.bg,
     skyBottom: '#1C2621',
     cloudColor: '#2B3A32',
-    cloudOpacity: 0.35,
+    cloudOpacity: 0.36,
     sunbeamColor: '#E3B261',
     sunbeamOpacity: 0,
     isNight: true,
@@ -151,18 +152,85 @@ const AMBIENT_PARTICLES: readonly AmbientMoteSpec[] = [
   { id: 'p4', leftPct: 78, topPct: 28, size: 5.5, driftX: 34, driftY: 60, durationMs: 9000, delayMs: 1500, kind: 'petal' },
 ];
 
-const STAR_COORDS: readonly { cx: number; cy: number; r: number; opacity: number; delayMs: number }[] = [
-  { cx: 42, cy: 32, r: 1.3, opacity: 0.65, delayMs: 0 },
-  { cx: 112, cy: 20, r: 1.7, opacity: 0.8, delayMs: 450 },
-  { cx: 188, cy: 48, r: 1.1, opacity: 0.55, delayMs: 900 },
-  { cx: 256, cy: 26, r: 1.6, opacity: 0.75, delayMs: 200 },
-  { cx: 318, cy: 56, r: 1.2, opacity: 0.6, delayMs: 1100 },
-  { cx: 76, cy: 84, r: 1.1, opacity: 0.45, delayMs: 700 },
-  { cx: 354, cy: 92, r: 1.4, opacity: 0.65, delayMs: 350 },
-  { cx: 404, cy: 30, r: 1.5, opacity: 0.7, delayMs: 1400 },
-  { cx: 150, cy: 78, r: 1.0, opacity: 0.5, delayMs: 600 },
-  { cx: 286, cy: 86, r: 1.2, opacity: 0.55, delayMs: 1050 },
+interface StarSpec {
+  id: string;
+  leftPct: number;
+  topPct: number;
+  size: number;
+  baseOpacity: number;
+  delayMs: number;
+}
+
+const TWILIGHT_STARS: readonly StarSpec[] = [
+  { id: 's1', leftPct: 10, topPct: 6, size: 3, baseOpacity: 0.72, delayMs: 0 },
+  { id: 's2', leftPct: 26, topPct: 4, size: 3.5, baseOpacity: 0.85, delayMs: 450 },
+  { id: 's3', leftPct: 43, topPct: 9, size: 2.5, baseOpacity: 0.60, delayMs: 900 },
+  { id: 's4', leftPct: 58, topPct: 5, size: 3.5, baseOpacity: 0.80, delayMs: 200 },
+  { id: 's5', leftPct: 73, topPct: 11, size: 2.5, baseOpacity: 0.65, delayMs: 1100 },
+  { id: 's6', leftPct: 18, topPct: 16, size: 2.5, baseOpacity: 0.50, delayMs: 700 },
+  { id: 's7', leftPct: 81, topPct: 18, size: 3, baseOpacity: 0.68, delayMs: 350 },
+  { id: 's8', leftPct: 92, topPct: 6, size: 3, baseOpacity: 0.75, delayMs: 1400 },
+  { id: 's9', leftPct: 34, topPct: 15, size: 2.2, baseOpacity: 0.52, delayMs: 600 },
+  { id: 's10', leftPct: 65, topPct: 17, size: 2.5, baseOpacity: 0.58, delayMs: 1050 },
 ];
+
+function TwinklingStar({
+  spec,
+  dimFactor,
+  reducedMotion,
+}: {
+  spec: StarSpec;
+  dimFactor: number;
+  reducedMotion: boolean;
+}) {
+  const opacity = useSharedValue(spec.baseOpacity * dimFactor);
+
+  useEffect(() => {
+    const rest = spec.baseOpacity * dimFactor;
+    if (reducedMotion) {
+      opacity.value = rest;
+      return;
+    }
+    opacity.value = withDelay(
+      spec.delayMs,
+      withRepeat(
+        withSequence(
+          withTiming(Math.min(1, rest * 1.25), {
+            duration: 1800,
+            easing: Easing.inOut(Easing.sin),
+          }),
+          withTiming(rest * 0.35, {
+            duration: 1800,
+            easing: Easing.inOut(Easing.sin),
+          }),
+        ),
+        -1,
+        false,
+      ),
+    );
+  }, [dimFactor, opacity, reducedMotion, spec.baseOpacity, spec.delayMs]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.starDot,
+        {
+          left: `${spec.leftPct}%`,
+          top: `${spec.topPct}%`,
+          width: spec.size,
+          height: spec.size,
+          borderRadius: spec.size / 2,
+        },
+        animStyle,
+      ]}
+    />
+  );
+}
 
 function DriftingCloud({
   spec,
@@ -396,6 +464,8 @@ export function GardenBackdrop({
   atmosphere,
   reducedMotion,
 }: GardenBackdropProps) {
+  const rawId = useId();
+  const uid = `bg_${rawId.replace(/[^a-zA-Z0-9]/g, '')}`;
   const beamPulse = useSharedValue(atmosphere.sunbeamOpacity);
 
   useEffect(() => {
@@ -409,7 +479,7 @@ export function GardenBackdrop({
           duration: 4600,
           easing: Easing.inOut(Easing.sin),
         }),
-        withTiming(atmosphere.sunbeamOpacity * 0.75, {
+        withTiming(atmosphere.sunbeamOpacity * 0.78, {
           duration: 4600,
           easing: Easing.inOut(Easing.sin),
         }),
@@ -423,9 +493,25 @@ export function GardenBackdrop({
     opacity: beamPulse.value,
   }));
 
+  const farHillColor = atmosphere.isNight
+    ? '#17221C'
+    : atmosphere.isDusk
+      ? '#DFCBB2'
+      : '#CFE0D5';
+  const nearHillColor = atmosphere.isNight
+    ? '#1E2C24'
+    : atmosphere.isDusk
+      ? '#E7D5BA'
+      : '#DAE7D9';
+  const cloudBankColor = atmosphere.isNight
+    ? '#25352C'
+    : atmosphere.isDusk
+      ? '#FBE7CF'
+      : '#FAF8F1';
+
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {/* Rich multi-stop atmospheric sky gradient */}
+      {/* Rich multi-stop atmospheric sky gradient + distant cloud banks & rolling horizon hills */}
       <Svg
         style={StyleSheet.absoluteFill}
         width="100%"
@@ -434,56 +520,97 @@ export function GardenBackdrop({
         preserveAspectRatio="none"
       >
         <Defs>
-          <LinearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <LinearGradient id={`${uid}_sky`} x1="0%" y1="0%" x2="0%" y2="100%">
             <Stop offset="0%" stopColor={atmosphere.skyTop} />
             <Stop offset="52%" stopColor={atmosphere.skyMid} />
             <Stop offset="100%" stopColor={atmosphere.skyBottom} />
           </LinearGradient>
-          <RadialGradient id="sunGlow" cx="78%" cy="14%" r="48%">
+          <RadialGradient id={`${uid}_sunGlow`} cx="78%" cy="14%" r="52%">
             <Stop
               offset="0%"
-              stopColor={atmosphere.isNight ? '#F4E8C6' : '#FFF6DC'}
-              stopOpacity={atmosphere.isNight ? 0.14 : 0.65}
+              stopColor={
+                atmosphere.isNight
+                  ? '#F4E8C6'
+                  : atmosphere.isDusk
+                    ? '#FFE1A8'
+                    : '#FFF6DC'
+              }
+              stopOpacity={atmosphere.isNight ? 0.14 : atmosphere.isDusk ? 0.72 : 0.65}
             />
             <Stop
               offset="60%"
-              stopColor={atmosphere.isNight ? '#E3B261' : '#FFF1C8'}
-              stopOpacity={atmosphere.isNight ? 0.04 : 0.18}
+              stopColor={
+                atmosphere.isNight
+                  ? '#E3B261'
+                  : atmosphere.isDusk
+                    ? '#F4BC78'
+                    : '#FFF1C8'
+              }
+              stopOpacity={atmosphere.isNight ? 0.04 : 0.22}
             />
             <Stop offset="100%" stopColor="#FFFFFF" stopOpacity={0} />
           </RadialGradient>
+          <LinearGradient id={`${uid}_horizonMist`} x1="0%" y1="0%" x2="0%" y2="100%">
+            <Stop offset="0%" stopColor={cloudBankColor} stopOpacity={0} />
+            <Stop offset="65%" stopColor={cloudBankColor} stopOpacity={0.55} />
+            <Stop offset="100%" stopColor={atmosphere.skyBottom} stopOpacity={0.85} />
+          </LinearGradient>
         </Defs>
-        <Rect x={0} y={0} width={400} height={700} fill="url(#skyGradient)" />
-        <Rect x={0} y={0} width={400} height={700} fill="url(#sunGlow)" />
+
+        <Rect x={0} y={0} width={400} height={700} fill={`url(#${uid}_sky)`} />
+        <Rect x={0} y={0} width={400} height={700} fill={`url(#${uid}_sunGlow)`} />
+
+        {/* Distant layered cloud banks hovering low across the valley horizon */}
+        <G opacity={atmosphere.isNight ? 0.42 : 0.68}>
+          <Ellipse cx={75} cy={512} rx={96} ry={28} fill={cloudBankColor} />
+          <Ellipse cx={185} cy={520} rx={118} ry={32} fill={cloudBankColor} />
+          <Ellipse cx={312} cy={508} rx={104} ry={28} fill={cloudBankColor} />
+        </G>
+
+        {/* Soft distant rolling meadow hills silhouette */}
+        <Path
+          d="M 0 568 Q 76 526 164 552 T 326 538 Q 368 532 400 546 L 400 700 L 0 700 Z"
+          fill={farHillColor}
+          opacity={atmosphere.isNight ? 0.65 : 0.56}
+        />
+        <Path
+          d="M 0 598 Q 98 564 206 588 T 400 576 L 400 700 L 0 700 Z"
+          fill={nearHillColor}
+          opacity={atmosphere.isNight ? 0.72 : 0.64}
+        />
+
+        {/* Soft valley mist blending hills gently into lower edge */}
+        <Rect x={0} y={530} width={400} height={170} fill={`url(#${uid}_horizonMist)`} />
       </Svg>
 
-      {/* Night starfield + crescent moon */}
-      {atmosphere.isNight ? (
-        <Svg
-          pointerEvents="none"
-          style={styles.starfield}
-          viewBox="0 0 440 240"
-          preserveAspectRatio="xMidYMin slice"
-        >
-          {STAR_COORDS.map((star, index) => (
-            <Circle
-              key={`star_${index}`}
-              cx={star.cx}
-              cy={star.cy}
-              r={star.r}
-              fill="#F4F1EA"
-              opacity={star.opacity}
+      {/* Twinkling twilight & night starfield + crescent moon */}
+      {atmosphere.isNight || atmosphere.isDusk ? (
+        <View style={styles.starLayer} pointerEvents="none">
+          {TWILIGHT_STARS.map((star) => (
+            <TwinklingStar
+              key={star.id}
+              spec={star}
+              dimFactor={atmosphere.isNight ? 1 : 0.42}
+              reducedMotion={reducedMotion}
             />
           ))}
-          {/* Soft crescent moon */}
-          <G opacity={0.85}>
-            <Circle cx={356} cy={54} r={16} fill="#F5E9C8" opacity={0.14} />
-            <Path
-              d="M360 44 A11 11 0 1 0 366 62 A8.5 8.5 0 1 1 360 44 Z"
-              fill="#F6EED9"
-            />
-          </G>
-        </Svg>
+          {atmosphere.isNight ? (
+            <Svg
+              pointerEvents="none"
+              style={styles.starfield}
+              viewBox="0 0 440 240"
+              preserveAspectRatio="xMidYMin slice"
+            >
+              <G opacity={0.86}>
+                <Circle cx={356} cy={54} r={17} fill="#F5E9C8" opacity={0.14} />
+                <Path
+                  d="M360 44 A11 11 0 1 0 366 62 A8.5 8.5 0 1 1 360 44 Z"
+                  fill="#F6EED9"
+                />
+              </G>
+            </Svg>
+          ) : null}
+        </View>
       ) : null}
 
       {/* Layered drifting sky clouds */}
@@ -497,7 +624,7 @@ export function GardenBackdrop({
         />
       ))}
 
-      {/* Soft diagonal sunbeams filtering across the sanctuary */}
+      {/* Richer diagonal golden-hour & morning sunbeams filtering across the sanctuary */}
       {atmosphere.sunbeamOpacity > 0 ? (
         <Animated.View style={[StyleSheet.absoluteFill, beamStyle]}>
           <Svg
@@ -507,13 +634,14 @@ export function GardenBackdrop({
             preserveAspectRatio="none"
           >
             <Defs>
-              <LinearGradient id="sunbeamGrad" x1="80%" y1="0%" x2="25%" y2="80%">
-                <Stop offset="0%" stopColor={atmosphere.sunbeamColor} stopOpacity={0.85} />
+              <LinearGradient id={`${uid}_beam`} x1="80%" y1="0%" x2="25%" y2="82%">
+                <Stop offset="0%" stopColor={atmosphere.sunbeamColor} stopOpacity={0.88} />
                 <Stop offset="100%" stopColor={atmosphere.sunbeamColor} stopOpacity={0} />
               </LinearGradient>
             </Defs>
-            <Polygon points="255,0 340,0 160,520 75,520" fill="url(#sunbeamGrad)" />
-            <Polygon points="355,0 400,0 260,460 205,460" fill="url(#sunbeamGrad)" opacity={0.6} />
+            <Polygon points="205,0 260,0 70,500 18,500" fill={`url(#${uid}_beam)`} opacity={0.55} />
+            <Polygon points="255,0 340,0 160,540 75,540" fill={`url(#${uid}_beam)`} />
+            <Polygon points="350,0 400,0 265,480 205,480" fill={`url(#${uid}_beam)`} opacity={0.68} />
           </Svg>
         </Animated.View>
       ) : null}
@@ -535,12 +663,23 @@ export function GardenBackdrop({
 }
 
 const styles = StyleSheet.create({
+  starLayer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 240,
+  },
   starfield: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     height: 240,
+  },
+  starDot: {
+    position: 'absolute',
+    backgroundColor: '#F4F1EA',
   },
   cloudAnchor: {
     position: 'absolute',
