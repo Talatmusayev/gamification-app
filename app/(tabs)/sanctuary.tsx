@@ -532,6 +532,8 @@ export default function SanctuaryScreen() {
   const selectedIsPlant = selectedItem?.category === 'plant';
   const canAffordWater = profile.dewBalance >= WATER_DEW_COST;
   const showWaterButton = selectedIsPlant && selectedStage < 3;
+  const daysTended = Object.keys(dailyLogs).length;
+  const hasPendingReveal = !dailyLogs[getTodayDateKey()];
   const guestPassActive =
     !profile.isPro && isGuestPassActive(profile.guestPassEndsAt);
   const guestPassRemaining = guestPassActive
@@ -549,8 +551,27 @@ export default function SanctuaryScreen() {
           selectedPlacementId={selectedPlacementId}
           recentlyWateredId={recentlyWateredId}
           isSleeping={Boolean(activeLantern)}
+          daysTended={daysTended}
+          harmonyDays={harmony.restfulDays}
+          hasPendingReveal={hasPendingReveal}
           onTilePress={handleTilePress}
           onPlacementPress={handlePlacementPress}
+          onPostboxPress={() => {
+            hapticSelection();
+            if (hasPendingReveal) {
+              void handleRevealTrigger();
+            } else {
+              router.push('/(tabs)/insights');
+            }
+          }}
+          onGreenhousePress={() => {
+            hapticSelection();
+            router.push('/(tabs)/shop');
+          }}
+          onPierPress={() => {
+            hapticSelection();
+            router.push('/duo');
+          }}
         />
       </View>
 
