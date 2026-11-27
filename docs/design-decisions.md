@@ -38,57 +38,50 @@ Tətbiqin ilk versiyası üçün aşağıdakılar mütləq işlək olmalıdır:
 
 ---
 
-## 3. Morning Reveal — Problem və Həll
+## 3. Morning Reveal — Problem and Solution
 
 ### Problem
 
-Mövcud kod `sanctuary.tsx`-də mount zamanı **bugünün** (`todayKey`) health məlumatını çəkir:
+The current app triggers a "Morning Reveal" when the user opens the app in the morning. However, the new day starts at **00:00**, and by that time the user has not yet walked or lived their day. This means the reveal cannot include the user's steps, making the data incomplete and misleading.
+
+> **In short:** Morning Reveal fires too early — the day has just begun, so there are no steps to show yet.
+
+Additionally, `Lantern.finishLantern()` hardcodes steps as `0`:
 
 ```ts
-// KÖHNƏ — YANLIŞDIR
-const summary = await fetchDailyHealthSummary(todayKey);
+// OLD — WRONG
+finishLantern(new Date().toISOString(), 0); // steps always 0
 ```
 
-**Niyə yanlışdır?**  
-Səhər tətbiqi ilk açılanda gün yeni başlamışdır — addımlar 0, uyqu isə tam bitməmişdir. Bu məlumatı reveal etmək mənasızdır.
+### Solution
 
-Bundan əlavə, `Lantern.finishLantern()` çağırışı steps dəyərini `0` olaraq hardcode edir:
+> *Imagine that the day starts at 00:00. The user wakes up in the morning, then continues their life — walks, works, etc. At **23:59**, Dewy makes a full report of that day (sleep + steps). The next morning, when the user opens the app, they see the report of **yesterday** and how many points they earned.*
 
-```ts
-// KÖHNƏ — YANLIŞ
-finishLantern(new Date().toISOString(), 0); // addımlar həmişə 0
-```
+**Flow:**
+1. The day begins at 00:00.
+2. The user lives their day — steps are tracked passively throughout.
+3. At **23:59** Dewy compiles the day's full report (sleep + steps → Dew points).
+4. The next morning when the user opens the app, they see **yesterday's rapport** — complete with all steps and sleep data.
+5. No manual "Reveal" button needed — it appears automatically.
 
-### Razılaşdırılmış həll — "Dünənki Reveal"
-
-**Prinsip:** Reveal həmişə dünənin (complete) məlumatını göstərir.
-
-**Axış:**
-1. İstifadəçi ilk dəfə tətbiqi qurduğu gün `startedDateKey = today` yazılır.
-2. Hər gün səhər tətbiq açılanda avtomatik `yesterdayKey` hesablanır.
-3. `yesterdayKey >= profile.startedDateKey` şərti yoxlanır — ilk gündən əvvəlki tarixlər göstərilmir.
-4. Dünənin tam uyqu + addım məlumatı (00:00–23:59 arası) çəkilir.
-5. Reveal kartı dünənin tarixini göstərərək açılır.
-6. İstifadəçi "Reveal" düyməsinə basmır — **avtomatikdir.**
-
-**Ediləcək dəyişikliklər:**
+**Code changes required:**
 
 ```
 src/domain/types.ts
-  → UserProfile tipinə startedDateKey: string əlavə et
+  → Add startedDateKey: string to UserProfile
 
 src/state/useSanctuaryStore.ts
   → createInitialState(): startedDateKey: ''
   → completeOnboarding(): startedDateKey = getTodayDateKey()
 
 app/(tabs)/sanctuary.tsx
-  → autoHealthCheckedRef məntiqini yesterdayKey ilə yenilə
-  → fetchDailyHealthSummary(yesterdayKey) çağır
-  → yesterdayKey >= profile.startedDateKey şərtini əlavə et
+  → Replace todayKey logic with yesterdayKey
+  → fetchDailyHealthSummary(yesterdayKey)
+  → Guard: only show if yesterdayKey >= profile.startedDateKey
 ```
 
-**İlk gün kənar vəziyyəti:**  
-Tətbiqi bugün qurubsa dünənin məlumatı yoxdur — bu normaldır, Reveal göstərilmir. Böyük problem deyil.
+**Edge case — first day:**  
+If the user just installed the app today, there is no yesterday to show. This is expected — no reveal on day one. Not a significant problem.
 
 ---
 
@@ -108,31 +101,19 @@ Goodnight Lantern: istifadəçi axşam "Fənəri yandır" düyməsinə basır �
 
 4. **Smartwatch olmayan istifadəçilər** üçün uyqu məlumatı tamamilə Lantern-ə bağlıdır — düyməyə basmasa heç bir uyqu datası olmur.
 
-### Razılaşdırılmış həll
+### Qərar — açıq məsələ (hələ həll edilməyib)
 
-**Lantern → İstəyə bağlı axşam rituali** (ölçmə vasitəsi deyil)
+Lantern mexanikasının **ölçmə vasitəsi kimi işlədilməsi məntiqsizdir** — istifadəçi fənəri yandırmağı unuda bilər.
 
-| Ssenari | Nə baş verir |
-|---|---|
-| Smartwatch / Health app var | Real uyqu məlumatı Health API-dən gəlir, Lantern gerekmez |
-| Smartwatch yoxdur + Lantern yandırıb | Bonus +Dew qazanır (axşam rituali) |
-| Smartwatch yoxdur + Lantern yandırmayıb | Səhər 1-toxunuşlu uyqu sualı görünür |
+**Müəyyənləşdirilmiş problemlər:**
+- Lantern-i ölçmə vasitəsi kimi istifadə etmək istifadəçi hərəkətindən asılıdır — etibarlı deyil.
+- Lantern Dew mükafatına (`awardBedtimeDew(10)`) günlük limit yoxdur → exploit riski.
+- `finishLantern(timestamp, 0)` həmişə steps=0 yazır → həmin günün addım məlumatı itirilir.
 
-**Səhər sual kartı (phone-only istifadəçilər üçün):**
+**Araşdırılan alternativ (hələ qərar verilməyib):**  
+Lantern-i ölçmə funksiyasından çıxarıb yalnız **isteğe bağlı axşam rituali** kimi saxlamaq. Smartwatch olmayan istifadəçilər üçün ayrıca bir mexanizm tapılmalıdır.
 
-```
-"Dünən necə yatdın?"
-  Yaxşı (7-8 saat)   ·   Normal (5-6)   ·   Pis (4-dən az)
-```
-
-İstifadəçi özü uyqusunu daha yaxşı bilir — bu sadə seçim Lantern taymerindən daha etibarlıdır.
-
-**Ediləcək dəyişikliklər:**
-- Lantern-i silmək yox — optional olaraq saxla, sadəcə məcburi deyil.
-- Lantern Dew mükafatına günlük limit əlavə et (exploit fix).
-- `finishLantern()` üçün hardcoded `steps=0` əvəzinə real health data istifadə et.
-- Smartwatch yoxdursa → səhər Reveal-dən əvvəl 1-toxunuşlu uyqu sualı göstər.
-- Mövcud `checkInModalOpen` / `handleConfirmCheckIn` mexanizması artıq `sanctuary.tsx`-də var — bunu genişləndir.
+> ⚠️ Bu məsələ hələ açıqdır. Həll razılaşdırıldıqdan sonra bu bölmə yenilənəcək.
 
 ---
 
